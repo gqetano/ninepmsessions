@@ -43,6 +43,7 @@
 }
 
 html {
+  background: var(--home);
   height: 100%;
   overscroll-behavior: none;
 }
@@ -67,18 +68,6 @@ body {
     "dlig" 1;
   text-rendering: optimizeLegibility;
   overflow: hidden;
-}
-
-body:has(.deck[data-active="quartetto"]) {
-  --page-background: var(--quartetto);
-}
-
-body:has(.deck[data-active="format"]) {
-  --page-background: var(--format);
-}
-
-body:has(.deck[data-active="submissions"]) {
-  --page-background: var(--submissions);
 }
 
 button {
@@ -692,12 +681,13 @@ body:has(.deck[data-colophon-visible="true"]) [data-bouncer-logo][data-docked="t
 
 @media (max-width: 720px) {
 :root {
+    --content-top: calc(var(--label-size) * 1.24 + clamp(4rem, 20vw, 6rem));
     --title-margin: clamp(0.18rem, 0.95vw, 0.35rem);
     --title-padding-bottom: var(--title-margin);
     --title-line-height: 0.86;
     --strip-height: calc((var(--label-size) * var(--title-line-height)) + (var(--title-margin) * 2));
     --peek-height: calc(var(--strip-height) + (var(--title-margin) * 2));
-    --marquee-height: clamp(2.31rem, 9.03vw, 3.36rem);
+    --marquee-height: clamp(1.4rem, 6vw, 1.7rem);
     --content-font-size: clamp(1.4365rem, 7.098vw, 1.69rem);
   }
 
@@ -724,7 +714,7 @@ body:has(.deck[data-colophon-visible="true"]) [data-bouncer-logo][data-docked="t
   }
 
   [data-marquee-text] {
-    font-size: var(--content-font-size);
+    font-size: clamp(0.875rem, 3.8vw, 1.05rem);
   }
 
   /* Adattamenti mobili dei form. */
