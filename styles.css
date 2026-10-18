@@ -690,7 +690,7 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
 @media (max-width: 720px) {
 :root {
     --strip-ratio: 0.6;
-    --content-top: calc(var(--label-size) * 1.24 + clamp(8rem, 40vw, 12rem));
+    --content-top: calc(var(--label-size) * 1.24 + clamp(12rem, 60vw, 18rem));
     --title-margin: clamp(0.18rem, 0.95vw, 0.35rem);
     --title-padding-bottom: var(--title-margin);
     --title-line-height: 0.86;
