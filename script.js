@@ -4,6 +4,13 @@
   const bouncingLogo = document.querySelector("[data-bouncer-logo]");
   const knownPanels = new Set(panels.map((panel) => panel.dataset.panel));
   const root = document.documentElement;
+  // La fascia appartiene alla sezione che la contiene, anche se viene spostata.
+  panels.forEach((panel) => {
+    if (panel.querySelector(":scope > [data-marquee-text]")) {
+      panel.style.setProperty("--panel-banner-height", "var(--marquee-height)");
+      deck.style.setProperty(`--${panel.dataset.panel}-banner-height`, "var(--marquee-height)");
+    }
+  });
   const panelDuration = 700;
   const panelEase = cubicBezier(0.16, 1, 0.3, 1);
   const maxBouncingLogos = 80;
@@ -541,20 +548,23 @@
     if (submissionNudgeFrame) {
       cancelFrame(submissionNudgeFrame);
       submissionNudgeFrame = null;
-      deck.style.gridTemplateRows = "";
-      deck.style.transition = "";
     }
     delete deck.dataset.submissionNudge;
+    deck.style.removeProperty("--submission-nudge-height");
     if (document.hidden || reducedMotion.matches || deck.dataset.logoGame === "active") return;
 
     submissionIdleTimer = window.setTimeout(() => {
       const editing = document.activeElement && document.activeElement.closest("input, textarea, select, [contenteditable]");
       if (["submissions", "colophon"].includes(deck.dataset.active) || deck.dataset.logoGame === "active" || panelAnimationFrame || editing) return;
-      const startRows = parseRows(getComputedStyle(deck).gridTemplateRows);
-      deck.style.transition = "none";
+      const submissionPanel = panels.find((panel) => panel.dataset.panel === "submissions");
+      const title = submissionPanel.querySelector("button");
+      const banner = submissionPanel.querySelector(":scope > [data-marquee-text]");
+      const distance = Math.max(0, title.offsetHeight + (banner ? banner.offsetHeight : 0) - submissionPanel.clientHeight);
+      if (!distance) {
+        resetSubmissionIdle();
+        return;
+      }
       deck.dataset.submissionNudge = "true";
-      const peakRows = parseRows(getComputedStyle(deck).gridTemplateRows);
-      delete deck.dataset.submissionNudge;
       const startedAt = getTime();
       const bounces = [
         { duration: 850, height: 1 },
@@ -570,17 +580,13 @@
           return false;
         });
         if (!current) {
-          deck.style.gridTemplateRows = "";
-          deck.style.transition = "";
           submissionNudgeFrame = null;
           resetSubmissionIdle();
           return;
         }
         const progress = elapsed / current.duration;
         const amount = current.height * 4 * progress * (1 - progress);
-        deck.style.gridTemplateRows = formatRows(startRows.map((row, index) =>
-          row + (peakRows[index] - row) * amount
-        ));
+        deck.style.setProperty("--submission-nudge-height", `${(distance * amount).toFixed(2)}px`);
         submissionNudgeFrame = requestFrame(bounce);
       }
       submissionNudgeFrame = requestFrame(bounce);

@@ -13,7 +13,8 @@
   --format: #d9dee0;
   --submissions: #ad704c;
   --label-size: 10vw;
-  --strip-height: calc(var(--label-size) * 0.37);
+  --strip-ratio: 0.37;
+  --strip-height: calc(var(--label-size) * var(--strip-ratio));
   --peek-height: calc(var(--label-size) * 0.88);
   --marquee-height: clamp(1.35rem, calc(var(--label-size) * 0.32), 2.45rem);
   --marquee-duration: 40000ms;
@@ -128,19 +129,17 @@ button {
 .deck {
   --closed-row: calc(var(--strip-height) + 0rem);
   --peek-row: calc(var(--peek-height) + 0rem);
-  --home-row: var(--closed-row);
-  --quartetto-row: var(--closed-row);
-  --format-row: var(--closed-row);
-  --marquee-row: var(--marquee-height);
-  --submissions-row: var(--closed-row);
-  --colophon-row: var(--closed-row);
+  --home-row: calc(var(--closed-row) + var(--home-banner-height, 0px));
+  --quartetto-row: calc(var(--closed-row) + var(--quartetto-banner-height, 0px));
+  --format-row: calc(var(--closed-row) + var(--format-banner-height, 0px));
+  --submissions-row: calc(var(--closed-row) + var(--submissions-banner-height, 0px));
+  --colophon-row: calc(var(--closed-row) + var(--colophon-banner-height, 0px));
 
   display: grid;
   grid-template-rows:
     var(--home-row)
     var(--quartetto-row)
     var(--format-row)
-    var(--marquee-row)
     var(--submissions-row)
     var(--colophon-row);
   height: 100svh;
@@ -170,27 +169,32 @@ button {
 
 .deck:not([data-logo-game="active"]):not([data-active="home"]):has([data-panel="home"]:hover),
 .deck:not([data-logo-game="active"]):not([data-active="home"]):has([data-panel="home"]:focus-within) {
-  --home-row: var(--peek-row);
+  --home-row: calc(var(--peek-row) + var(--home-banner-height, 0px));
 }
 
 .deck:not([data-logo-game="active"]):not([data-active="quartetto"]):has([data-panel="quartetto"]:hover),
 .deck:not([data-logo-game="active"]):not([data-active="quartetto"]):has([data-panel="quartetto"]:focus-within) {
-  --quartetto-row: var(--peek-row);
+  --quartetto-row: calc(var(--peek-row) + var(--quartetto-banner-height, 0px));
 }
 
 .deck:not([data-logo-game="active"]):not([data-active="format"]):has([data-panel="format"]:hover),
 .deck:not([data-logo-game="active"]):not([data-active="format"]):has([data-panel="format"]:focus-within) {
-  --format-row: var(--peek-row);
+  --format-row: calc(var(--peek-row) + var(--format-banner-height, 0px));
 }
 
 .deck:not([data-logo-game="active"]):not([data-active="submissions"]):has([data-panel="submissions"]:hover),
 .deck:not([data-logo-game="active"]):not([data-active="submissions"]):has([data-panel="submissions"]:focus-within) {
-  --submissions-row: var(--peek-row);
+  --submissions-row: calc(var(--peek-row) + var(--submissions-banner-height, 0px));
 }
 
-.deck[data-submission-nudge="true"]:not([data-active="submissions"]) {
-  --submissions-row: var(--peek-row);
+.deck[data-submission-nudge="true"] > [data-panel="submissions"] {
+  z-index: 4;
+  height: calc(100% + var(--submission-nudge-height, 0px));
+  transform: translateY(calc(-1 * var(--submission-nudge-height, 0px)));
+  overflow: hidden;
+  will-change: height, transform;
 }
+.deck[data-submission-nudge="true"] #content-submissions { visibility: hidden; }
 
 .deck[data-logo-game="active"] > section > button {
   pointer-events: none;
@@ -228,7 +232,7 @@ button {
 
 .deck > section > button {
   position: sticky;
-  top: 0;
+  top: var(--panel-banner-height, 0px);
   z-index: 2;
   display: block;
   width: 100%;
@@ -380,7 +384,9 @@ button {
 
 [data-marquee-text] {
   --marquee-distance: 0px;
-  position: relative;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
   z-index: 3;
   display: flex;
   align-items: center;
@@ -668,7 +674,7 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
 .deck[data-active="colophon"] { --colophon-row: 1fr; }
 .deck:not([data-logo-game="active"]):not([data-active="colophon"]):has([data-panel="colophon"]:hover),
 .deck:not([data-logo-game="active"]):not([data-active="colophon"]):has([data-panel="colophon"]:focus-within) {
-  --colophon-row: var(--peek-row);
+  --colophon-row: calc(var(--peek-row) + var(--colophon-banner-height, 0px));
 }
 
 @media (min-width: 1200px) {
@@ -683,7 +689,8 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
 
 @media (max-width: 720px) {
 :root {
-    --content-top: calc(var(--label-size) * 1.24 + clamp(6rem, 30vw, 9rem));
+    --strip-ratio: 0.6;
+    --content-top: calc(var(--label-size) * 1.24 + clamp(8rem, 40vw, 12rem));
     --title-margin: clamp(0.18rem, 0.95vw, 0.35rem);
     --title-padding-bottom: var(--title-margin);
     --title-line-height: 0.86;
