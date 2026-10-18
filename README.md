@@ -29,3 +29,9 @@ Controlli statici di HTML, CSS, risorse e sintassi JavaScript.
 Prove simulate dei form, senza inviare email reali.
 La verifica visiva conclusiva resta da effettuare nell’anteprima.
 
+Lo scroll legge il contenuto senza cambiare scheda quando raggiunge il bordo.
+Un ulteriore gesto iniziato al bordo apre la sezione adiacente: touch, rotella
+e trackpad sono supportati. Per wheel gli eventi separati da oltre 240ms
+sono considerati un nuovo gesto; l’inerzia continua non avanza altre schede.
+I titoli restano cliccabili. Il cambio tramite scroll è sospeso nei campi e
+durante il gioco. Le linguette chiuse tornano tagliate anche con il focus.

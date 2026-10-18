@@ -441,6 +441,11 @@
       const isActive = panel.dataset.panel === panelName;
       const tab = panel.querySelector("button");
 
+      if (!isActive && tab.getAttribute("aria-expanded") === "true") {
+        panel.dataset.peekDismissed = "true";
+      } else if (isActive) {
+        delete panel.dataset.peekDismissed;
+      }
       tab.setAttribute("aria-expanded", String(isActive));
       if (!isActive) {
         panel.scrollTop = 0;
@@ -518,6 +523,11 @@
   panels.forEach((panel) => {
     const tab = panel.querySelector("button");
 
+    panel.addEventListener("pointerleave", (event) => {
+      if (event.pointerType === "mouse") delete panel.dataset.peekDismissed;
+    });
+    tab.addEventListener("blur", () => { delete panel.dataset.peekDismissed; });
+
     tab.addEventListener("click", () => {
       if (deck.dataset.logoGame === "active") {
         return;
@@ -531,6 +541,100 @@
       setActivePanel(nextPanel);
     });
   });
+
+  // I bordi vengono letti all'inizio del gesto: raggiungerli non cambia scheda.
+  const editableFields = "input, textarea, select, [contenteditable]";
+  let touchNavigation;
+  let wheelNavigation;
+  let navigationLockedUntil = 0;
+
+  function canScrollNavigate(target) {
+    return deck.dataset.logoGame !== "active" && !panelAnimationFrame &&
+      getTime() >= navigationLockedUntil && !target.closest(editableFields) &&
+      !(document.activeElement && document.activeElement.closest(editableFields));
+  }
+
+  function captureNavigation() {
+    const panel = panels.find((item) => item.dataset.panel === deck.dataset.active);
+    return {
+      panel,
+      atTop: panel.scrollTop <= 2,
+      atBottom: panel.scrollHeight - panel.clientHeight - panel.scrollTop <= 2,
+    };
+  }
+
+  function adjacentPanel(gesture, direction) {
+    if (!gesture || gesture.panel.dataset.panel !== deck.dataset.active) return null;
+    if (!(direction > 0 ? gesture.atBottom : gesture.atTop)) return null;
+    return panels[panels.indexOf(gesture.panel) + direction] || null;
+  }
+
+  function openAdjacentPanel(panel) {
+    navigationLockedUntil = getTime() + panelDuration + 150;
+    setActivePanel(panel.dataset.panel);
+  }
+
+  deck.addEventListener("touchstart", (event) => {
+    touchNavigation = null;
+    if (event.touches.length !== 1 || !canScrollNavigate(event.target)) return;
+    const touch = event.touches[0];
+    touchNavigation = { ...captureNavigation(), x: touch.clientX, y: touch.clientY, next: null };
+  }, { passive: true, capture: true });
+
+  deck.addEventListener("touchmove", (event) => {
+    if (!touchNavigation) return;
+    if (event.touches.length !== 1 || !canScrollNavigate(event.target)) {
+      touchNavigation = null;
+      return;
+    }
+    const dx = event.touches[0].clientX - touchNavigation.x;
+    const dy = event.touches[0].clientY - touchNavigation.y;
+    touchNavigation.next = null;
+    if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
+      touchNavigation = null;
+      return;
+    }
+    if (Math.abs(dy) < 8 || Math.abs(dy) < Math.abs(dx) * 1.3) return;
+    const next = adjacentPanel(touchNavigation, dy < 0 ? 1 : -1);
+    if (!next) return;
+    if (event.cancelable) event.preventDefault();
+    if (Math.abs(dy) >= 40) touchNavigation.next = next;
+  }, { passive: false, capture: true });
+
+  deck.addEventListener("touchend", (event) => {
+    const gesture = touchNavigation;
+    touchNavigation = null;
+    if (gesture && gesture.next && canScrollNavigate(event.target)) openAdjacentPanel(gesture.next);
+  }, { passive: true, capture: true });
+  deck.addEventListener("touchcancel", () => { touchNavigation = null; }, { passive: true });
+
+  deck.addEventListener("wheel", (event) => {
+    const now = getTime();
+    const newGesture = !wheelNavigation || now - wheelNavigation.lastAt > 240;
+    if (newGesture) {
+      wheelNavigation = {
+        ...captureNavigation(), lastAt: now, distance: 0,
+        direction: Math.sign(event.deltaY), used: false,
+        allowed: !event.ctrlKey && canScrollNavigate(event.target),
+      };
+    }
+    wheelNavigation.lastAt = now;
+    if (!wheelNavigation.allowed || wheelNavigation.used || !canScrollNavigate(event.target) ||
+        event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY) || !event.deltaY) return;
+    const direction = Math.sign(event.deltaY);
+    if (direction !== wheelNavigation.direction) {
+      wheelNavigation.allowed = false;
+      return;
+    }
+    const next = adjacentPanel(wheelNavigation, direction);
+    if (!next) return;
+    if (event.cancelable) event.preventDefault();
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? wheelNavigation.panel.clientHeight : 1;
+    wheelNavigation.distance += Math.abs(event.deltaY) * unit;
+    if (wheelNavigation.distance < 40) return;
+    wheelNavigation.used = true;
+    openAdjacentPanel(next);
+  }, { passive: false, capture: true });
 
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => {

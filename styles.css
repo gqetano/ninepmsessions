@@ -167,23 +167,19 @@ button {
   --submissions-row: 1fr;
 }
 
-.deck:not([data-logo-game="active"]):not([data-active="home"]):has([data-panel="home"]:hover),
-.deck:not([data-logo-game="active"]):not([data-active="home"]):has([data-panel="home"]:focus-within) {
+.deck:not([data-logo-game="active"]):not([data-active="home"]):has([data-panel="home"]:not([data-peek-dismissed]) > button:focus-visible) {
   --home-row: calc(var(--peek-row) + var(--home-banner-height, 0px));
 }
 
-.deck:not([data-logo-game="active"]):not([data-active="quartetto"]):has([data-panel="quartetto"]:hover),
-.deck:not([data-logo-game="active"]):not([data-active="quartetto"]):has([data-panel="quartetto"]:focus-within) {
+.deck:not([data-logo-game="active"]):not([data-active="quartetto"]):has([data-panel="quartetto"]:not([data-peek-dismissed]) > button:focus-visible) {
   --quartetto-row: calc(var(--peek-row) + var(--quartetto-banner-height, 0px));
 }
 
-.deck:not([data-logo-game="active"]):not([data-active="format"]):has([data-panel="format"]:hover),
-.deck:not([data-logo-game="active"]):not([data-active="format"]):has([data-panel="format"]:focus-within) {
+.deck:not([data-logo-game="active"]):not([data-active="format"]):has([data-panel="format"]:not([data-peek-dismissed]) > button:focus-visible) {
   --format-row: calc(var(--peek-row) + var(--format-banner-height, 0px));
 }
 
-.deck:not([data-logo-game="active"]):not([data-active="submissions"]):has([data-panel="submissions"]:hover),
-.deck:not([data-logo-game="active"]):not([data-active="submissions"]):has([data-panel="submissions"]:focus-within) {
+.deck:not([data-logo-game="active"]):not([data-active="submissions"]):has([data-panel="submissions"]:not([data-peek-dismissed]) > button:focus-visible) {
   --submissions-row: calc(var(--peek-row) + var(--submissions-banner-height, 0px));
 }
 
@@ -615,6 +611,7 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
 /* Responsive e preferenze di movimento: un blocco per condizione. */
 
 .collaboration-content { min-width: 0; font-size: var(--form-font-size); line-height: 1.1; }
+.collaboration-form-column { min-width: 0; }
 .collaboration-intro { margin: 0 0 1.4rem; }
 
 .site-footer {
@@ -672,9 +669,26 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
   padding-bottom: 0.75rem;
 }
 .deck[data-active="colophon"] { --colophon-row: 1fr; }
-.deck:not([data-logo-game="active"]):not([data-active="colophon"]):has([data-panel="colophon"]:hover),
-.deck:not([data-logo-game="active"]):not([data-active="colophon"]):has([data-panel="colophon"]:focus-within) {
+.deck:not([data-logo-game="active"]):not([data-active="colophon"]):has([data-panel="colophon"]:not([data-peek-dismissed]) > button:focus-visible) {
   --colophon-row: calc(var(--peek-row) + var(--colophon-banner-height, 0px));
+}
+
+@media (hover: hover) {
+  .deck:not([data-logo-game="active"]):not([data-active="home"]):has([data-panel="home"]:not([data-peek-dismissed]):hover) {
+    --home-row: calc(var(--peek-row) + var(--home-banner-height, 0px));
+  }
+  .deck:not([data-logo-game="active"]):not([data-active="quartetto"]):has([data-panel="quartetto"]:not([data-peek-dismissed]):hover) {
+    --quartetto-row: calc(var(--peek-row) + var(--quartetto-banner-height, 0px));
+  }
+  .deck:not([data-logo-game="active"]):not([data-active="format"]):has([data-panel="format"]:not([data-peek-dismissed]):hover) {
+    --format-row: calc(var(--peek-row) + var(--format-banner-height, 0px));
+  }
+  .deck:not([data-logo-game="active"]):not([data-active="submissions"]):has([data-panel="submissions"]:not([data-peek-dismissed]):hover) {
+    --submissions-row: calc(var(--peek-row) + var(--submissions-banner-height, 0px));
+  }
+  .deck:not([data-logo-game="active"]):not([data-active="colophon"]):has([data-panel="colophon"]:not([data-peek-dismissed]):hover) {
+    --colophon-row: calc(var(--peek-row) + var(--colophon-banner-height, 0px));
+  }
 }
 
 @media (min-width: 1200px) {
