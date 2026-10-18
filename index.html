@@ -9,7 +9,9 @@
       name="description"
       content="NINEPMSESSIONS: live session con artisti emergenti e affermati accompagnati da un quartetto d'archi."
     >
-    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=2">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico?v=3" sizes="16x16 32x32 48x48 64x64">
+    <link rel="icon" type="image/png" href="assets/favicon.png?v=3" sizes="512x512">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=3" sizes="any">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -62,7 +64,7 @@
               Ringraziamo anche tutti coloro che a vario titolo e almeno una
               volta ci hanno aiutato a realizzare questo format e tenerlo in
               piedi:
-              <span data-dot-inline="outline">Mauro Arduino</span>
+              <span data-dot-inline="outline">Mauro Arduini</span>
               <span data-dot-inline="outline">Gabriele Calanca</span>
             </p>
           </div>
@@ -105,17 +107,8 @@
           <span>SUBMISSIONS</span>
         </button>
         <div id="content-submissions" class="panel-content">
-          <div data-split-row="ruled" class="submission-section">
-            <p data-split-title>Quick Guidelines</p>
-            <aside class="submission-guidelines" aria-label="Quick Guidelines">
-              <div><span class="submission-number">01</span> <h3>Cosa proporre</h3> <p>Puoi proporre uno o al massimo due brani originali, editi o inediti. Inserisci un link per ciascun brano che ci permetta di ascoltarlo/i.</p></div>
-              <div><span class="submission-number">02</span> <h3>Il materiale</h3> <p>Presentaci brevemente il progetto e aggiungi i riferimenti utili per farti conoscere: altri ascolti, social e press kit.<br><br>Nelle note raccontaci come immagini la sessione: se parteciperesti da solo o con altri musicisti, quanti sareste e quali strumenti vorresti coinvolgere nella sessione. Indica qui anche eventuali esigenze di pubblicazione o altre richieste particolari. Assicurati che i link siano accessibili.</p></div>
-              <div><span class="submission-number">03</span> <h3>La selezione</h3> <p>Ogni proposta viene valutata in relazione alla compatibilità con il format. L’invio non garantisce la partecipazione e una mancata selezione non rappresenta un giudizio sul valore del progetto.</p></div>
-              <div><span class="submission-number">04</span> <h3>Dopo l’invio</h3> <p>Se la proposta è in linea con il format, ti ricontatteremo via email per approfondire i dettagli della produzione e le condizioni economiche.</p></div>
-            </aside>
-          </div>
-          <div data-split-row="ruled" class="submission-section">
-            <p data-split-title>Submit</p>
+          <div data-split-row="body" class="submission-section">
+            <div class="submission-content">
             <!-- Per riaprire: data-submissions-open="true" e rimuovere disabled dal fieldset. -->
             <form id="submission-form" class="submission-form" novalidate data-submissions-open="true" action="https://api.web3forms.com/submit" method="POST">
               <input type="hidden" name="access_key" value="ea11a9a9-e865-4479-946a-2871b2d4c571">
@@ -145,11 +138,25 @@
                 <label class="submission-sr-only" for="artist-notes">Note</label>
                 <textarea id="artist-notes" name="note" rows="1" required maxlength="3000" placeholder="Note" aria-describedby="notes-help"></textarea>
                 <p id="notes-help" class="submission-notes-help" hidden>Raccontaci come immagini la sessione: verrai da solo o con altri musicisti? Indica quanti sarete, quali strumenti porterete ed eventuali strumenti o accompagnamenti che vorresti coinvolgere. Se partecipi da solo e non hai richieste particolari, basta scriverlo.</p>
-                <button type="submit" class="submission-send" disabled>Invia candidatura ↗</button>
+                <button type="submit" class="submission-send" disabled>Invia candidatura</button>
               </fieldset>
               <p id="submission-result" class="submission-result" role="status" aria-live="polite" aria-atomic="true"></p>
               <noscript><p>Per inviare la candidatura è necessario attivare JavaScript.</p></noscript>
             </form>
+              <aside class="submission-guidelines" aria-labelledby="guidelines-title">
+                <h2 id="guidelines-title">Quick Guidelines</h2>
+                <div class="guidelines-columns">
+                  <div class="guidelines-column">
+                    <div><span class="submission-number">01</span> <h3>Cosa proporre</h3> <p>Puoi proporre uno o al massimo due brani originali, editi o inediti. Inserisci un link per ciascun brano che ci permetta di ascoltarlo/i.</p></div>
+                    <div><span class="submission-number">02</span> <h3>Il materiale</h3> <p>Presentaci brevemente il progetto e aggiungi i riferimenti utili per farti conoscere: altri ascolti, social e press kit.<br><br>Nelle note raccontaci come immagini la sessione: se parteciperesti da solo o con altri musicisti, quanti sareste e quali strumenti vorresti coinvolgere nella sessione. Indica qui anche eventuali esigenze di pubblicazione o altre richieste particolari. Assicurati che i link siano accessibili.</p></div>
+                  </div>
+                  <div class="guidelines-column">
+                    <div><span class="submission-number">03</span> <h3>La selezione</h3> <p>Ogni proposta viene valutata in relazione alla compatibilità con il format. L’invio non garantisce la partecipazione e una mancata selezione non rappresenta un giudizio sul valore del progetto.</p></div>
+                    <div><span class="submission-number">04</span> <h3>Dopo l’invio</h3> <p>Se la proposta è in linea con il format, ti ricontatteremo via email per approfondire i dettagli della produzione e le condizioni economiche.</p></div>
+                  </div>
+                </div>
+              </aside>
+            </div>
           </div>
           <div data-split-row="ruled" class="submission-section">
             <p data-split-title>Collab</p>
@@ -174,7 +181,7 @@
                   <textarea id="collab-proposal" name="proposta" rows="1" required maxlength="5000" placeholder="Raccontaci la tua proposta"></textarea>
                   <label class="submission-sr-only" for="collab-links">Link di riferimento</label>
                   <textarea id="collab-links" name="link_riferimento" rows="1" maxlength="3000" placeholder="Link di riferimento"></textarea>
-                  <button type="submit" class="submission-send" disabled>Invia proposta ↗</button>
+                  <button type="submit" class="submission-send" disabled>Invia proposta</button>
                 </fieldset>
                 <p class="submission-result" role="status" aria-live="polite" aria-atomic="true"></p>
                 <noscript><p>Per inviare la proposta è necessario attivare JavaScript.</p></noscript>
@@ -183,15 +190,15 @@
           </div>
         </div>
       </section>
-      <section data-panel="colophon" inert aria-hidden="true">
+      <section data-panel="colophon">
         <button type="button" aria-expanded="false" aria-controls="content-colophon">
           <span>COLOPHON</span>
         </button>
         <footer id="content-colophon" class="panel-content site-footer" aria-label="Contatti e crediti">
           <div class="footer-main">
           <div class="footer-logos">
-            <img src="assets/9pm-sessions-cream.svg" alt="9PM Sessions" width="188" height="142">
-            <img src="assets/9pm-string-quartet-cream.svg" alt="9PM String Quartet" width="171" height="132">
+            <img src="assets/9pm-sessions.svg" alt="9PM Sessions" width="188" height="142">
+            <img src="assets/9pm-string-quartet.svg" alt="9PM String Quartet" width="171" height="132">
           </div>
           <div class="footer-information">
             <div>
@@ -206,11 +213,8 @@
           </div>
           </div>
           <div class="footer-technical">
-            <p>Disegnato e sviluppato da <a data-design-credit href="https://www.instagram.com/gqetano/" target="_blank" rel="noopener noreferrer">Gaetano Roselli</a></p>
-            <div class="footer-service-credits">
-              <p class="footer-copyright">© 2026 9PM Sessions — Tutti i diritti riservati.</p>
-              <p>Moduli gestiti tramite <a href="https://web3forms.com/" target="_blank" rel="noopener noreferrer">Web3Forms</a></p>
-            </div>
+            <p class="footer-copyright">© 2026 9PM Sessions — Tutti i diritti riservati.</p>
+            <p class="footer-design">Disegnato e sviluppato da <a data-design-credit href="https://www.instagram.com/gqetano/" target="_blank" rel="noopener noreferrer">Gaetano Roselli</a></p>
           </div>
         </footer>
       </section>
@@ -218,7 +222,6 @@
 
     <button type="button" data-bouncer-logo aria-label="Posiziona il logo 9PM">
       <img src="assets/9pm_logo.svg" alt="" aria-hidden="true">
-      <span data-bouncer-restart aria-hidden="true">↻</span>
     </button>
 
     <script src="submissions.js"></script>

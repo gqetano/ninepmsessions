@@ -340,6 +340,7 @@
 
     isLogoDocked = true;
     deck.dataset.logoGame = "docked";
+    resetSubmissionIdle();
 
     if (logoAnimationFrame) {
       cancelFrame(logoAnimationFrame);
@@ -429,18 +430,14 @@
   function applyPanelState(panelName) {
     deck.dataset.active = panelName;
     document.getElementById("content-colophon").inert = panelName !== "colophon";
-    const colophon = document.querySelector('[data-panel="colophon"]');
-    if (panelName !== "submissions" && panelName !== "colophon") {
-      delete deck.dataset.colophonVisible;
-      colophon.inert = true;
-      colophon.setAttribute("aria-hidden", "true");
-    }
-
     panels.forEach((panel) => {
       const isActive = panel.dataset.panel === panelName;
       const tab = panel.querySelector("button");
 
       tab.setAttribute("aria-expanded", String(isActive));
+      if (!isActive) {
+        panel.scrollTop = 0;
+      }
     });
   }
 
@@ -487,6 +484,7 @@
   }
 
   function setActivePanel(panelName, shouldAnimate = true) {
+    resetSubmissionIdle();
     if (!knownPanels.has(panelName)) {
       panelName = "home";
     }
@@ -520,7 +518,7 @@
 
       const panelName = panel.dataset.panel;
       const nextPanel = deck.dataset.active === panelName && panelName !== "home"
-        ? (panelName === "colophon" ? "submissions" : "home")
+        ? "home"
         : panelName;
 
       setActivePanel(nextPanel);
@@ -534,49 +532,85 @@
     });
   }
 
-  // La quinta scheda è disponibile soltanto dopo lo scroll fino in fondo a Collab.
-  const submissionPanel = document.querySelector('[data-panel="submissions"]');
-  const colophonPanel = document.querySelector('[data-panel="colophon"]');
-  let footerLogoFrame;
-  function updateFooterLogo() {
-    const top = colophonPanel.getBoundingClientRect().top;
-    const logoHeight = bouncingLogo ? bouncingLogo.offsetHeight : 0;
-    const lift = deck.dataset.colophonVisible === "true"
-      ? Math.max(0, Math.min(window.innerHeight - logoHeight - getLogoDockGap(), window.innerHeight - top))
-      : 0;
-    root.style.setProperty("--footer-logo-lift", `${lift}px`);
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let submissionIdleTimer;
+  let submissionNudgeFrame;
+
+  function resetSubmissionIdle() {
+    window.clearTimeout(submissionIdleTimer);
+    if (submissionNudgeFrame) {
+      cancelFrame(submissionNudgeFrame);
+      submissionNudgeFrame = null;
+      deck.style.gridTemplateRows = "";
+      deck.style.transition = "";
+    }
+    delete deck.dataset.submissionNudge;
+    if (document.hidden || reducedMotion.matches || deck.dataset.logoGame === "active") return;
+
+    submissionIdleTimer = window.setTimeout(() => {
+      const editing = document.activeElement && document.activeElement.closest("input, textarea, select, [contenteditable]");
+      if (["submissions", "colophon"].includes(deck.dataset.active) || deck.dataset.logoGame === "active" || panelAnimationFrame || editing) return;
+      const startRows = parseRows(getComputedStyle(deck).gridTemplateRows);
+      deck.style.transition = "none";
+      deck.dataset.submissionNudge = "true";
+      const peakRows = parseRows(getComputedStyle(deck).gridTemplateRows);
+      delete deck.dataset.submissionNudge;
+      const startedAt = getTime();
+      const bounces = [
+        { duration: 850, height: 1 },
+        { duration: 450, height: 0.28 },
+        { duration: 240, height: 0.08 },
+      ];
+
+      function bounce(now) {
+        let elapsed = now - startedAt;
+        const current = bounces.find((item) => {
+          if (elapsed < item.duration) return true;
+          elapsed -= item.duration;
+          return false;
+        });
+        if (!current) {
+          deck.style.gridTemplateRows = "";
+          deck.style.transition = "";
+          submissionNudgeFrame = null;
+          resetSubmissionIdle();
+          return;
+        }
+        const progress = elapsed / current.duration;
+        const amount = current.height * 4 * progress * (1 - progress);
+        deck.style.gridTemplateRows = formatRows(startRows.map((row, index) =>
+          row + (peakRows[index] - row) * amount
+        ));
+        submissionNudgeFrame = requestFrame(bounce);
+      }
+      submissionNudgeFrame = requestFrame(bounce);
+    }, 8000);
   }
-  function scheduleFooterLogo() {
-    cancelFrame(footerLogoFrame);
-    footerLogoFrame = requestFrame(updateFooterLogo);
-  }
-  function revealColophon() {
-    if (deck.dataset.active !== "submissions" || deck.dataset.colophonVisible === "true") return;
-    if (submissionPanel.scrollHeight - submissionPanel.clientHeight - submissionPanel.scrollTop > 3) return;
-    deck.dataset.colophonVisible = "true";
-    colophonPanel.inert = false;
-    colophonPanel.removeAttribute("aria-hidden");
-    scheduleFooterLogo();
-  }
-  submissionPanel.addEventListener("scroll", revealColophon, { passive: true });
-  submissionPanel.addEventListener("wheel", (event) => {
-    if (event.deltaY > 0) revealColophon();
-  }, { passive: true });
-  submissionPanel.addEventListener("touchmove", revealColophon, { passive: true });
-  new MutationObserver(scheduleFooterLogo).observe(deck, {
-    attributes: true, attributeFilter: ["data-active", "data-colophon-visible"],
+
+  ["pointermove", "pointerdown", "wheel", "keydown", "scroll", "input", "focusin", "focusout"].forEach((eventName) => {
+    document.addEventListener(eventName, resetSubmissionIdle, { passive: true, capture: true });
   });
-  const footerResizeObserver = new ResizeObserver(scheduleFooterLogo);
-  footerResizeObserver.observe(colophonPanel);
+  document.addEventListener("visibilitychange", resetSubmissionIdle);
+  reducedMotion.addEventListener("change", resetSubmissionIdle);
 
   window.addEventListener("resize", scheduleTitleCalibration);
   window.addEventListener("resize", scheduleBouncingLogoBounds);
 
   calibrateTitleSize();
   buildSubmissionMarquee();
+  const opensSubmissions = location.hash.toLowerCase() === "#submissions";
   if (deck.dataset.logoGameEnabled !== "false") {
     startBouncingLogo();
+    if (opensSubmissions) dockBouncingLogos();
   }
-  history.replaceState(null, "", location.pathname);
-  setActivePanel("home", false);
+  setActivePanel(opensSubmissions ? "submissions" : "home", false);
+
+  window.addEventListener("hashchange", () => {
+    if (location.hash.toLowerCase() === "#submissions") {
+      if (deck.dataset.logoGame === "active") dockBouncingLogos();
+      setActivePanel("submissions");
+    } else if (!location.hash) {
+      setActivePanel("home");
+    }
+  });
 })();
