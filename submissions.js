@@ -21,6 +21,25 @@
     const fieldSelector = "input:not([type=hidden]):not([type=checkbox]), textarea";
     const fields = [];
     const errors = new Map();
+    function fitTextarea(field) {
+      if (field.tagName !== "TEXTAREA" || !field.offsetWidth) return;
+      field.style.height = "auto";
+      field.style.height = `${field.scrollHeight}px`;
+    }
+    function fitTextareas() { fields.forEach(fitTextarea); }
+    let formWidth = 0;
+    if (typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(() => {
+        const width = form.getBoundingClientRect().width;
+        if (width === formWidth) return;
+        formWidth = width;
+        fitTextareas();
+      }).observe(form);
+    }
+    window.addEventListener("resize", fitTextareas);
+    form.addEventListener("reset", () => window.requestAnimationFrame(fitTextareas));
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTextareas);
+
     function registerField(field) {
       fields.push(field);
       const row = document.createElement("div");
@@ -37,8 +56,11 @@
       field.setAttribute("aria-describedby", [description, error.id].filter(Boolean).join(" "));
       errors.set(field, error);
       field.addEventListener("input", () => {
+        fitTextarea(field);
         if (field.hasAttribute("aria-invalid")) validateField(field);
       });
+      field.addEventListener("focus", () => fitTextarea(field));
+      fitTextarea(field);
       return row;
     }
     form.querySelectorAll(fieldSelector).forEach(registerField);

@@ -504,7 +504,12 @@ button {
   line-height: 1.2;
   scroll-margin-top: calc(var(--label-size) + 2rem);
 }
-.submission-field-row > textarea { resize: vertical; }
+.submission-field-row > textarea {
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 /* Il primo campo parte alla stessa altezza del testo introduttivo di Collab. */
 .submission-form fieldset > .submission-field-row:first-of-type > input {
   height: 1.1em;
@@ -652,7 +657,8 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
 }
 .footer-copyright { grid-column: 2; }
 .footer-design { grid-column: 3; }
-[data-design-credit] { white-space: nowrap; }
+[data-design-credit],
+.keep-together { white-space: nowrap; }
 .footer-socials { display: flex; flex-direction: column; align-items: flex-start; gap: 0; margin: 0; }
 
 [data-panel="colophon"] {
@@ -772,3 +778,8 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
     animation-duration: 1ms;
   }
 }
+
+/* Flipper usa un solo logo e riserva il trascinamento alla pallina. */
+[data-bouncer-logo][data-flipper="true"] { user-select: none; -webkit-user-select: none; }
+[data-bouncer-logo][data-flipper="true"][data-docked="true"] { pointer-events: auto; cursor: grab; }
+[data-bouncer-logo][data-flipper="true"][data-dragging="true"] { cursor: grabbing; transition: none; }

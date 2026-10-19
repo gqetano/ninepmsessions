@@ -554,8 +554,7 @@
   function canScrollNavigate(target) {
     return deck.dataset.scrollNavigation !== "false" &&
       deck.dataset.logoGame !== "active" && !panelAnimationFrame &&
-      getTime() >= navigationLockedUntil && !target.closest(editableFields) &&
-      !(document.activeElement && document.activeElement.closest(editableFields));
+      getTime() >= navigationLockedUntil;
   }
 
   function captureNavigation() {
@@ -568,6 +567,7 @@
   }
 
   function adjacentPanel(gesture, direction) {
+    if (document.activeElement && document.activeElement.closest(editableFields)) return null;
     if (!gesture || gesture.panel.dataset.panel !== deck.dataset.active) return null;
     if (!(direction > 0 ? gesture.atBottom : gesture.atTop)) return null;
     return panels[panels.indexOf(gesture.panel) + direction] || null;
@@ -641,7 +641,8 @@
     const touch = event.touches[0];
     touchNavigation = { ...captureNavigation(), x: touch.clientX, y: touch.clientY,
       lastY: touch.clientY, next: null, direction: 0 };
-    touchNavigation.routed = event.target.closest("[data-panel]") !== touchNavigation.panel;
+    touchNavigation.routed = event.target.closest("[data-panel]") !== touchNavigation.panel ||
+      Boolean(event.target.closest(".submission-form"));
   }, { passive: true, capture: true });
 
   deck.addEventListener("touchmove", (event) => {
@@ -704,7 +705,7 @@
     const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? wheelNavigation.panel.clientHeight : 1;
     const next = wheelNavigation.next || adjacentPanel(wheelNavigation, direction);
     if (!next) {
-      if (event.target.closest("[data-panel]") !== wheelNavigation.panel) {
+      if (event.target.closest("[data-panel]") !== wheelNavigation.panel || event.target.closest(".submission-form")) {
         if (event.cancelable) event.preventDefault();
         routePanelScroll(wheelNavigation.panel, event.deltaY * unit);
       }
@@ -796,6 +797,7 @@
     document.addEventListener(eventName, resetSubmissionIdle, { passive: true, capture: true });
   });
   document.addEventListener("visibilitychange", resetSubmissionIdle);
+  deck.addEventListener("logo-game-change", resetSubmissionIdle);
   reducedMotion.addEventListener("change", resetSubmissionIdle);
 
   window.addEventListener("resize", scheduleTitleCalibration);
@@ -804,7 +806,7 @@
   calibrateTitleSize();
   buildSubmissionMarquee();
   const opensSubmissions = location.hash.toLowerCase() === "#submissions";
-  if (deck.dataset.logoGameEnabled !== "false") {
+  if (deck.dataset.logoGameEnabled !== "false" && deck.dataset.logoGameMode !== "flipper") {
     startBouncingLogo();
     if (opensSubmissions) dockBouncingLogos();
   }
@@ -812,7 +814,9 @@
 
   window.addEventListener("hashchange", () => {
     if (location.hash.toLowerCase() === "#submissions") {
-      if (deck.dataset.logoGame === "active") dockBouncingLogos();
+      if (deck.dataset.logoGameMode === "flipper") {
+        deck.dispatchEvent(new Event("logo-dock"));
+      } else if (deck.dataset.logoGame === "active") dockBouncingLogos();
       setActivePanel("submissions");
     } else if (!location.hash) {
       setActivePanel("home");

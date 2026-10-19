@@ -15,8 +15,8 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <!-- Gioco iniziale attivo: cliccare un logo per accedere ai contenuti. -->
-    <main class="deck" data-logo-game-enabled="true" data-scroll-navigation="experimental" data-active="home" aria-label="Navigazione principale a schede">
+    <!-- Giochi: flipper attivo; moltiplicazione conservato e spento. -->
+    <main class="deck" data-logo-game-enabled="true" data-logo-game-mode="flipper" data-scroll-navigation="experimental" data-active="home" aria-label="Navigazione principale a schede">
       <section data-panel="home">
         <button type="button" aria-expanded="true" aria-controls="content-home">
           <span>NINEPM·SESSIONS</span>
@@ -205,7 +205,7 @@
             <div>
               <p>Roma, Italia</p>
               <a href="mailto:9pmsessions@gmail.com">9pmsessions@gmail.com</a>
-              <p><a href="tel:+393291315294">+39 329 1315294</a> — Giulia Gentile</p>
+              <p><a href="tel:+393291315294">+39 329 1315294</a> — <span class="keep-together">Giulia Gentile</span></p>
             </div>
               <nav class="footer-socials" aria-label="Social 9PM">
                 <p>IG: <a href="https://www.instagram.com/9pm_sessions/" target="_blank" rel="noopener noreferrer">@9pm_sessions</a></p>
@@ -227,6 +227,7 @@
 
     <script src="submissions.js"></script>
     <script src="script.js"></script>
+    <script src="flipper.js"></script>
     <script data-goatcounter="https://9pmsessions.goatcounter.com/count"
             async src="https://gc.zgo.at/count.js"></script>
   </body>
