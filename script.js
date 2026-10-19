@@ -15,6 +15,8 @@
   const panelEase = cubicBezier(0.16, 1, 0.3, 1);
   const maxBouncingLogos = 80;
   let panelAnimationFrame;
+  let panelDrag;
+  let wheelReleaseTimer;
   let resizeFrame;
   let logoAnimationFrame;
   let logoResizeFrame;
@@ -453,7 +455,7 @@
     });
   }
 
-  function animatePanelState(panelName) {
+  function animatePanelState(panelName, duration = panelDuration) {
     const startRows = parseRows(getComputedStyle(deck).gridTemplateRows);
 
     if (panelAnimationFrame) {
@@ -472,7 +474,7 @@
     deck.getBoundingClientRect();
 
     function step(now) {
-      const progress = Math.min(1, (now - startedAt) / panelDuration);
+      const progress = Math.min(1, (now - startedAt) / duration);
       const easedProgress = panelEase(progress);
       const currentRows = startRows.map((row, index) => {
         const targetRow = targetRows[index] || 0;
@@ -496,6 +498,7 @@
   }
 
   function setActivePanel(panelName, shouldAnimate = true) {
+    discardPanelDrag();
     resetSubmissionIdle();
     if (!knownPanels.has(panelName)) {
       panelName = "home";
@@ -542,14 +545,15 @@
     });
   });
 
-  // I bordi vengono letti all'inizio del gesto: raggiungerli non cambia scheda.
+  // Prova disattivabile con data-scroll-navigation="false" sul main.
   const editableFields = "input, textarea, select, [contenteditable]";
   let touchNavigation;
   let wheelNavigation;
   let navigationLockedUntil = 0;
 
   function canScrollNavigate(target) {
-    return deck.dataset.logoGame !== "active" && !panelAnimationFrame &&
+    return deck.dataset.scrollNavigation !== "false" &&
+      deck.dataset.logoGame !== "active" && !panelAnimationFrame &&
       getTime() >= navigationLockedUntil && !target.closest(editableFields) &&
       !(document.activeElement && document.activeElement.closest(editableFields));
   }
@@ -569,72 +573,163 @@
     return panels[panels.indexOf(gesture.panel) + direction] || null;
   }
 
-  function openAdjacentPanel(panel) {
-    navigationLockedUntil = getTime() + panelDuration + 150;
-    setActivePanel(panel.dataset.panel);
+  function discardPanelDrag() {
+    window.clearTimeout(wheelReleaseTimer);
+    if (!panelDrag) return;
+    const original = panelDrag;
+    panelDrag = null;
+    delete deck.dataset.panelDrag;
+    deck.style.gridTemplateRows = "";
+    deck.style.transition = "";
+    original.panel.scrollTop = original.scrollTop;
+  }
+
+  function dragPanel(gesture, next, distance) {
+    if (!panelDrag) {
+      resetSubmissionIdle();
+      deck.dataset.panelDrag = "true";
+      deck.style.transition = "none";
+      const startRows = parseRows(getComputedStyle(deck).gridTemplateRows);
+      const from = deck.dataset.active;
+      const scrollTop = gesture.panel.scrollTop;
+      deck.dataset.active = next.dataset.panel;
+      const targetRows = parseRows(getComputedStyle(deck).gridTemplateRows);
+      deck.dataset.active = from;
+      panelDrag = { panel: gesture.panel, from, to: next.dataset.panel,
+        startRows, targetRows, scrollTop, progress: 0,
+        travel: Math.max(120, Math.abs(targetRows[panels.indexOf(next)] - startRows[panels.indexOf(next)])),
+      };
+    }
+    if (panelDrag.to !== next.dataset.panel) return;
+    panelDrag.progress = Math.min(1, Math.max(0, distance / panelDrag.travel));
+    if (!reducedMotion.matches) {
+      deck.style.gridTemplateRows = formatRows(panelDrag.startRows.map((row, index) =>
+        row + (panelDrag.targetRows[index] - row) * panelDrag.progress
+      ));
+    }
+  }
+
+  function releasePanelDrag(cancel = false) {
+    window.clearTimeout(wheelReleaseTimer);
+    if (!panelDrag) return;
+    const drag = panelDrag;
+    panelDrag = null;
+    const commit = !cancel && drag.progress >= 0.22;
+    const destination = commit ? drag.to : drag.from;
+    const duration = Math.max(180, Math.min(450, panelDuration * (commit ? 1 - drag.progress : drag.progress)));
+    if (reducedMotion.matches) {
+      deck.style.gridTemplateRows = "";
+      deck.style.transition = "";
+      applyPanelState(destination);
+    } else {
+      animatePanelState(destination, duration);
+    }
+    delete deck.dataset.panelDrag;
+    if (!commit) drag.panel.scrollTop = drag.scrollTop;
+    navigationLockedUntil = getTime() + (reducedMotion.matches ? 0 : duration);
+    resetSubmissionIdle();
+  }
+
+  function routePanelScroll(panel, delta) {
+    panel.scrollTop = Math.max(0, Math.min(panel.scrollHeight - panel.clientHeight,
+      panel.scrollTop + delta));
   }
 
   deck.addEventListener("touchstart", (event) => {
     touchNavigation = null;
     if (event.touches.length !== 1 || !canScrollNavigate(event.target)) return;
     const touch = event.touches[0];
-    touchNavigation = { ...captureNavigation(), x: touch.clientX, y: touch.clientY, next: null };
+    touchNavigation = { ...captureNavigation(), x: touch.clientX, y: touch.clientY,
+      lastY: touch.clientY, next: null, direction: 0 };
+    touchNavigation.routed = event.target.closest("[data-panel]") !== touchNavigation.panel;
   }, { passive: true, capture: true });
 
   deck.addEventListener("touchmove", (event) => {
     if (!touchNavigation) return;
     if (event.touches.length !== 1 || !canScrollNavigate(event.target)) {
       touchNavigation = null;
+      releasePanelDrag(true);
       return;
     }
     const dx = event.touches[0].clientX - touchNavigation.x;
     const dy = event.touches[0].clientY - touchNavigation.y;
-    touchNavigation.next = null;
-    if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
+    if (!panelDrag && Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
       touchNavigation = null;
       return;
     }
-    if (Math.abs(dy) < 8 || Math.abs(dy) < Math.abs(dx) * 1.3) return;
-    const next = adjacentPanel(touchNavigation, dy < 0 ? 1 : -1);
-    if (!next) return;
+    if (!panelDrag && (Math.abs(dy) < 8 || Math.abs(dy) < Math.abs(dx) * 1.3)) return;
+    if (panelDrag) {
+      if (event.cancelable) event.preventDefault();
+      dragPanel(touchNavigation, touchNavigation.next, -dy * touchNavigation.direction);
+      return;
+    }
+    const direction = dy < 0 ? 1 : -1;
+    const next = adjacentPanel(touchNavigation, direction);
+    if (!next) {
+      if (touchNavigation.routed) {
+        if (event.cancelable) event.preventDefault();
+        routePanelScroll(touchNavigation.panel, touchNavigation.lastY - event.touches[0].clientY);
+      }
+      touchNavigation.lastY = event.touches[0].clientY;
+      return;
+    }
     if (event.cancelable) event.preventDefault();
-    if (Math.abs(dy) >= 40) touchNavigation.next = next;
+    touchNavigation.next = next;
+    touchNavigation.direction = direction;
+    dragPanel(touchNavigation, next, Math.abs(dy));
   }, { passive: false, capture: true });
 
   deck.addEventListener("touchend", (event) => {
-    const gesture = touchNavigation;
     touchNavigation = null;
-    if (gesture && gesture.next && canScrollNavigate(event.target)) openAdjacentPanel(gesture.next);
+    releasePanelDrag(!canScrollNavigate(event.target));
   }, { passive: true, capture: true });
-  deck.addEventListener("touchcancel", () => { touchNavigation = null; }, { passive: true });
+  deck.addEventListener("touchcancel", () => {
+    touchNavigation = null;
+    releasePanelDrag(true);
+  }, { passive: true });
 
   deck.addEventListener("wheel", (event) => {
     const now = getTime();
-    const newGesture = !wheelNavigation || now - wheelNavigation.lastAt > 240;
+    const newGesture = !wheelNavigation || now - wheelNavigation.lastAt > 140;
     if (newGesture) {
-      wheelNavigation = {
-        ...captureNavigation(), lastAt: now, distance: 0,
+      wheelNavigation = { ...captureNavigation(), lastAt: now, distance: 0,
         direction: Math.sign(event.deltaY), used: false,
-        allowed: !event.ctrlKey && canScrollNavigate(event.target),
+        allowed: !event.ctrlKey && canScrollNavigate(event.target), next: null,
       };
     }
     wheelNavigation.lastAt = now;
     if (!wheelNavigation.allowed || wheelNavigation.used || !canScrollNavigate(event.target) ||
         event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY) || !event.deltaY) return;
     const direction = Math.sign(event.deltaY);
-    if (direction !== wheelNavigation.direction) {
-      wheelNavigation.allowed = false;
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? wheelNavigation.panel.clientHeight : 1;
+    const next = wheelNavigation.next || adjacentPanel(wheelNavigation, direction);
+    if (!next) {
+      if (event.target.closest("[data-panel]") !== wheelNavigation.panel) {
+        if (event.cancelable) event.preventDefault();
+        routePanelScroll(wheelNavigation.panel, event.deltaY * unit);
+      }
       return;
     }
-    const next = adjacentPanel(wheelNavigation, direction);
-    if (!next) return;
     if (event.cancelable) event.preventDefault();
-    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? wheelNavigation.panel.clientHeight : 1;
-    wheelNavigation.distance += Math.abs(event.deltaY) * unit;
-    if (wheelNavigation.distance < 40) return;
-    wheelNavigation.used = true;
-    openAdjacentPanel(next);
+    if (!wheelNavigation.next) wheelNavigation.direction = direction;
+    wheelNavigation.next = next;
+    wheelNavigation.distance = Math.max(0, wheelNavigation.distance + event.deltaY * unit * wheelNavigation.direction);
+    dragPanel(wheelNavigation, next, wheelNavigation.distance);
+    window.clearTimeout(wheelReleaseTimer);
+    wheelReleaseTimer = window.setTimeout(() => {
+      wheelNavigation.used = true;
+      releasePanelDrag();
+    }, 140);
+    if (panelDrag && panelDrag.progress >= 1) {
+      wheelNavigation.used = true;
+      releasePanelDrag();
+    }
   }, { passive: false, capture: true });
+
+  window.addEventListener("resize", discardPanelDrag);
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) discardPanelDrag();
+  });
 
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => {
@@ -659,7 +754,7 @@
 
     submissionIdleTimer = window.setTimeout(() => {
       const editing = document.activeElement && document.activeElement.closest("input, textarea, select, [contenteditable]");
-      if (["submissions", "colophon"].includes(deck.dataset.active) || deck.dataset.logoGame === "active" || panelAnimationFrame || editing) return;
+      if (["submissions", "colophon"].includes(deck.dataset.active) || deck.dataset.logoGame === "active" || panelAnimationFrame || panelDrag || editing) return;
       const submissionPanel = panels.find((panel) => panel.dataset.panel === "submissions");
       const title = submissionPanel.querySelector("button");
       const banner = submissionPanel.querySelector(":scope > [data-marquee-text]");

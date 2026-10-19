@@ -29,9 +29,19 @@ Controlli statici di HTML, CSS, risorse e sintassi JavaScript.
 Prove simulate dei form, senza inviare email reali.
 La verifica visiva conclusiva resta da effettuare nell’anteprima.
 
-Lo scroll legge il contenuto senza cambiare scheda quando raggiunge il bordo.
-Un ulteriore gesto iniziato al bordo apre la sezione adiacente: touch, rotella
-e trackpad sono supportati. Per wheel gli eventi separati da oltre 240ms
-sono considerati un nuovo gesto; l’inerzia continua non avanza altre schede.
-I titoli restano cliccabili. Il cambio tramite scroll è sospeso nei campi e
-durante il gioco. Le linguette chiuse tornano tagliate anche con il focus.
+## Prova: navigazione e trascinamento tramite scroll
+Il contenuto scorre normalmente. Un ulteriore gesto iniziato al bordo permette
+il trascinamento progressivo verso la scheda adiacente. Al rilascio, oltre il
+22% della corsa il passaggio viene completato; sotto tale soglia torna indietro.
+Touch, trackpad e rotella sono supportati; per wheel il rilascio viene stimato
+con 140ms senza eventi. La compilazione dei campi e il gioco sospendono la prova.
+I titoli restano cliccabili e la preferenza di movimento ridotto è rispettata.
+
+Per annullare TUTTA la navigazione tramite scroll, impostare nel main di
+index.html: data-scroll-navigation="false". Si torna alla navigazione tramite
+clic, mantenendo le altre modifiche al sito.
+
+Checkpoint prima del trascinamento progressivo:
+work/ninepm-before-scroll-drag-experiment/ nella cartella di lavoro.
+La verifica è stata effettuata con prove simulate: verificare la sensazione
+reale su telefono e trackpad prima di considerare definitiva questa prova.
