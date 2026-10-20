@@ -10,7 +10,6 @@
   let lastTime = 0;
   let pointer;
   let docked = false;
-  let introFinished = false;
 
   function bounds() {
     return {
@@ -27,17 +26,26 @@
     window.cancelAnimationFrame(frame);
     frame = 0;
   }
+  // A riposo il logo è appoggiato sopra il colophon (ancoraggio definito in script.js).
+  function placeDocked() {
+    if (typeof window.ninepmDockPosition === "function") {
+      const position = window.ninepmDockPosition(logo);
+      ball.x = position.x;
+      ball.y = position.y;
+      return;
+    }
+    const limit = bounds();
+    const gap = Math.max(10, Math.min(window.innerWidth, window.innerHeight) * 0.018);
+    ball.x = Math.max(0, limit.x - gap);
+    ball.y = Math.max(0, limit.y - gap);
+  }
   function dock() {
     stop();
     pointer = null;
     logo.removeAttribute("data-dragging");
     docked = true;
-    introFinished = true;
     ball.vx = ball.vy = ball.angle = 0;
-    const limit = bounds();
-    const gap = Math.max(10, Math.min(window.innerWidth, window.innerHeight) * 0.018);
-    ball.x = Math.max(0, limit.x - gap);
-    ball.y = Math.max(0, limit.y - gap);
+    placeDocked();
     logo.setAttribute("data-docked", "true");
     deck.dataset.logoGame = "docked";
     paint();
@@ -69,6 +77,8 @@
   }
   function launch() {
     stop();
+    deck.dataset.logoGame = "interactive";
+    deck.dispatchEvent(new Event("logo-game-change"));
     docked = false;
     logo.removeAttribute("data-docked");
     lastTime = performance.now();
@@ -144,7 +154,6 @@
       const speed = Math.hypot(ball.vx, ball.vy);
       if (speed > 2400) { ball.vx *= 2400 / speed; ball.vy *= 2400 / speed; }
     }
-    deck.dataset.logoGame = introFinished ? "docked" : "active";
     launch();
   }
   logo.addEventListener("pointerup", (event) => release(event));
@@ -152,6 +161,11 @@
   logo.addEventListener("lostpointercapture", (event) => { if (pointer) release(event, true); });
   logo.addEventListener("click", (event) => { if (event.detail === 0) toggleFlight(); });
   deck.addEventListener("logo-dock", dock);
+  deck.addEventListener("dock-anchor-change", () => {
+    if (!docked || pointer) return;
+    placeDocked();
+    paint();
+  });
   window.addEventListener("resize", () => {
     if (docked) dock();
     else {
@@ -174,7 +188,6 @@
     ball.y = limit.y * 0.3;
     ball.vx = 380;
     ball.vy = 290;
-    deck.dataset.logoGame = "active";
     paint();
     launch();
   }

@@ -24,6 +24,11 @@
   const bouncingLogoStates = [];
   const bouncingLogoListeners = new WeakSet();
   let isLogoDocked = false;
+  // Il logo a riposo è agganciato al bordo superiore della sezione colophon.
+  const colophonPanel = panels.find((panel) => panel.dataset.panel === "colophon");
+  let dockTrackFrame = 0;
+  let dockStableFrames = 0;
+  let dockLastTop = 0;
 
   function getTime() {
     return typeof performance !== "undefined" && performance.now
@@ -150,11 +155,66 @@
   function getDockedLogoPosition(logo) {
     const bounds = getLogoBounds(logo);
     const gap = getLogoDockGap();
+    const anchorTop = colophonPanel
+      ? colophonPanel.getBoundingClientRect().top
+      : window.innerHeight;
 
     return {
       x: Math.max(0, bounds.maxX - gap),
-      y: Math.max(0, bounds.maxY - gap),
+      // Appoggiato sopra il colophon: sale e scende insieme alla sezione.
+      y: Math.max(0, Math.min(bounds.maxY - gap, anchorTop - bounds.height - gap)),
     };
+  }
+
+  // Condivisa con flipper.js, che usa lo stesso ancoraggio.
+  window.ninepmDockPosition = getDockedLogoPosition;
+
+  // Finché il colophon si muove (animazione, trascinamento, hover, resize)
+  // segue il suo bordo frame per frame; si ferma dopo ~400ms di quiete.
+  function trackDockAnchor() {
+    dockStableFrames = 0;
+    if (dockTrackFrame || !colophonPanel) {
+      return;
+    }
+
+    dockLastTop = colophonPanel.getBoundingClientRect().top;
+
+    function tick() {
+      syncDockAnchor();
+
+      if (dockStableFrames >= 24) {
+        dockTrackFrame = 0;
+        document.querySelectorAll("[data-bouncer-logo]").forEach((logo) => {
+          logo.removeAttribute("data-dock-follow");
+        });
+        return;
+      }
+
+      dockTrackFrame = requestFrame(tick);
+    }
+
+    dockTrackFrame = requestFrame(tick);
+  }
+
+  // Riallinea subito i loghi a riposo; chiamata anche nello stesso frame in
+  // cui le righe della griglia vengono scritte, così il logo non resta indietro.
+  function syncDockAnchor() {
+    if (!colophonPanel) {
+      return;
+    }
+
+    const top = colophonPanel.getBoundingClientRect().top;
+    const moved = Math.abs(top - dockLastTop) >= 0.05;
+
+    dockLastTop = top;
+    dockStableFrames = moved ? 0 : dockStableFrames + 1;
+
+    if (moved) {
+      document.querySelectorAll("[data-bouncer-logo]").forEach((logo) => {
+        logo.setAttribute("data-dock-follow", "true");
+      });
+      deck.dispatchEvent(new Event("dock-anchor-change"));
+    }
   }
 
   function setLogoPosition(logoState, x, y) {
@@ -426,6 +486,7 @@
     const size = (availableWidth / measuredWidth) * baseSize;
 
     root.style.setProperty("--label-size", `${size.toFixed(4)}px`);
+    trackDockAnchor();
   }
 
   function scheduleTitleCalibration() {
@@ -437,11 +498,14 @@
   }
 
   function applyPanelState(panelName) {
+    const previousPanel = deck.dataset.active;
     deck.dataset.active = panelName;
-    document.getElementById("content-colophon").inert = panelName !== "colophon";
     panels.forEach((panel) => {
       const isActive = panel.dataset.panel === panelName;
       const tab = panel.querySelector("button");
+      // Il contenuto delle sezioni chiuse non è raggiungibile da Tab né dagli screen reader.
+      const content = panel.querySelector(":scope > .panel-content");
+      if (content) content.inert = !isActive;
 
       if (!isActive && tab.getAttribute("aria-expanded") === "true") {
         panel.dataset.peekDismissed = "true";
@@ -449,7 +513,7 @@
         delete panel.dataset.peekDismissed;
       }
       tab.setAttribute("aria-expanded", String(isActive));
-      if (!isActive) {
+      if (!isActive || previousPanel !== panelName) {
         panel.scrollTop = 0;
       }
     });
@@ -463,6 +527,9 @@
       panelAnimationFrame = null;
     }
 
+    const changesPanel = deck.dataset.active !== panelName;
+    const openingPanel = panels.find((panel) => panel.dataset.panel === panelName);
+    trackDockAnchor();
     deck.style.transition = "none";
     deck.style.gridTemplateRows = "";
     applyPanelState(panelName);
@@ -483,6 +550,8 @@
       });
 
       deck.style.gridTemplateRows = formatRows(currentRows);
+      syncDockAnchor();
+      if (changesPanel) openingPanel.scrollTop = 0;
 
       if (progress < 1) {
         panelAnimationFrame = requestFrame(step);
@@ -491,6 +560,7 @@
 
       deck.style.gridTemplateRows = "";
       deck.style.transition = "";
+      if (changesPanel) openingPanel.scrollTop = 0;
       panelAnimationFrame = null;
     }
 
@@ -520,6 +590,7 @@
       deck.style.gridTemplateRows = "";
       deck.style.transition = "";
       applyPanelState(panelName);
+      trackDockAnchor();
     }
   }
 
@@ -549,6 +620,12 @@
   const editableFields = "input, textarea, select, [contenteditable]";
   let touchNavigation;
   let wheelNavigation;
+  let wheelTail = false;
+  let lastWheelTime = -Infinity;
+  let lastWheelDelta = 0;
+  let lastContentScrollTime = -Infinity;
+  let lastEdgePush = -Infinity;
+  const edgeCooldown = 350;
   let navigationLockedUntil = 0;
 
   function canScrollNavigate(target) {
@@ -569,7 +646,10 @@
   function adjacentPanel(gesture, direction) {
     if (document.activeElement && document.activeElement.closest(editableFields)) return null;
     if (!gesture || gesture.panel.dataset.panel !== deck.dataset.active) return null;
-    if (!(direction > 0 ? gesture.atBottom : gesture.atTop)) return null;
+    const stillAtEdge = direction > 0
+      ? gesture.panel.scrollHeight - gesture.panel.clientHeight - gesture.panel.scrollTop <= 2
+      : gesture.panel.scrollTop <= 2;
+    if (!(direction > 0 ? gesture.atBottom : gesture.atTop) || !stillAtEdge) return null;
     return panels[panels.indexOf(gesture.panel) + direction] || null;
   }
 
@@ -582,6 +662,7 @@
     deck.style.gridTemplateRows = "";
     deck.style.transition = "";
     original.panel.scrollTop = original.scrollTop;
+    trackDockAnchor();
   }
 
   function dragPanel(gesture, next, distance) {
@@ -595,28 +676,39 @@
       deck.dataset.active = next.dataset.panel;
       const targetRows = parseRows(getComputedStyle(deck).gridTemplateRows);
       deck.dataset.active = from;
+      const fullTravel = Math.max(120, Math.abs(targetRows[panels.indexOf(next)] - startRows[panels.indexOf(next)]));
+      const travel = fullTravel;
       panelDrag = { panel: gesture.panel, from, to: next.dataset.panel,
-        startRows, targetRows, scrollTop, progress: 0,
-        travel: Math.max(120, Math.abs(targetRows[panels.indexOf(next)] - startRows[panels.indexOf(next)])),
+        startRows, targetRows, scrollTop, progress: 0, travel, input: gesture.input,
+        // Basta un gesto breve: ~60px di rotella, ~56px di dito (max 22% della corsa).
+        commitProgress: Math.min(0.22, (gesture.input === "wheel" ? 60 : 56) / travel),
       };
     }
     if (panelDrag.to !== next.dataset.panel) return;
+    trackDockAnchor();
     panelDrag.progress = Math.min(1, Math.max(0, distance / panelDrag.travel));
     if (!reducedMotion.matches) {
       deck.style.gridTemplateRows = formatRows(panelDrag.startRows.map((row, index) =>
         row + (panelDrag.targetRows[index] - row) * panelDrag.progress
       ));
+      syncDockAnchor();
     }
   }
 
-  function releasePanelDrag(cancel = false) {
+  function releasePanelDrag(cancel = false, flick = false) {
     window.clearTimeout(wheelReleaseTimer);
     if (!panelDrag) return;
     const drag = panelDrag;
     panelDrag = null;
-    const commit = !cancel && drag.progress >= 0.22;
+    if (drag.input === "wheel") {
+      wheelNavigation = null;
+      wheelTail = true;
+    }
+    // Uno swipe veloce ("flick") conferma anche se breve (almeno 12px).
+    const commit = !cancel &&
+      (drag.progress >= drag.commitProgress || (flick && drag.progress * drag.travel >= 12));
     const destination = commit ? drag.to : drag.from;
-    const duration = Math.max(180, Math.min(450, panelDuration * (commit ? 1 - drag.progress : drag.progress)));
+    const duration = Math.max(300, Math.min(650, panelDuration * (commit ? 1 - drag.progress : drag.progress)));
     if (reducedMotion.matches) {
       deck.style.gridTemplateRows = "";
       deck.style.transition = "";
@@ -640,7 +732,7 @@
     if (event.touches.length !== 1 || !canScrollNavigate(event.target)) return;
     const touch = event.touches[0];
     touchNavigation = { ...captureNavigation(), x: touch.clientX, y: touch.clientY,
-      lastY: touch.clientY, next: null, direction: 0 };
+      lastY: touch.clientY, next: null, direction: 0, samples: [] };
     touchNavigation.routed = event.target.closest("[data-panel]") !== touchNavigation.panel ||
       Boolean(event.target.closest(".submission-form"));
   }, { passive: true, capture: true });
@@ -654,6 +746,9 @@
     }
     const dx = event.touches[0].clientX - touchNavigation.x;
     const dy = event.touches[0].clientY - touchNavigation.y;
+    const sampleTime = getTime();
+    touchNavigation.samples.push({ t: sampleTime, y: event.touches[0].clientY });
+    touchNavigation.samples = touchNavigation.samples.filter((sample) => sampleTime - sample.t <= 120);
     if (!panelDrag && Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy)) {
       touchNavigation = null;
       return;
@@ -681,50 +776,88 @@
   }, { passive: false, capture: true });
 
   deck.addEventListener("touchend", (event) => {
+    const gesture = touchNavigation;
     touchNavigation = null;
-    releasePanelDrag(!canScrollNavigate(event.target));
+    let flick = false;
+    if (gesture && panelDrag && gesture.samples.length >= 2) {
+      const first = gesture.samples[0];
+      const last = gesture.samples[gesture.samples.length - 1];
+      const speed = ((first.y - last.y) * gesture.direction) / Math.max(1, last.t - first.t);
+      flick = speed >= 0.3 && getTime() - last.t < 80;
+    }
+    releasePanelDrag(!canScrollNavigate(event.target), flick);
   }, { passive: true, capture: true });
   deck.addEventListener("touchcancel", () => {
     touchNavigation = null;
     releasePanelDrag(true);
   }, { passive: true });
 
+  // Un unico gestore possiede lo scroll verticale, anche sopra titoli e form.
   deck.addEventListener("wheel", (event) => {
+    if (event.ctrlKey || deck.dataset.scrollNavigation === "false" || deck.dataset.logoGame === "active" ||
+        !event.deltaY || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+    if (event.cancelable) event.preventDefault();
+
     const now = getTime();
-    const newGesture = !wheelNavigation || now - wheelNavigation.lastAt > 140;
-    if (newGesture) {
-      wheelNavigation = { ...captureNavigation(), lastAt: now, distance: 0,
-        direction: Math.sign(event.deltaY), used: false,
-        allowed: !event.ctrlKey && canScrollNavigate(event.target), next: null,
-      };
-    }
-    wheelNavigation.lastAt = now;
-    if (!wheelNavigation.allowed || wheelNavigation.used || !canScrollNavigate(event.target) ||
-        event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY) || !event.deltaY) return;
-    const direction = Math.sign(event.deltaY);
-    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? wheelNavigation.panel.clientHeight : 1;
-    const next = wheelNavigation.next || adjacentPanel(wheelNavigation, direction);
-    if (!next) {
-      if (event.target.closest("[data-panel]") !== wheelNavigation.panel || event.target.closest(".submission-form")) {
-        if (event.cancelable) event.preventDefault();
-        routePanelScroll(wheelNavigation.panel, event.deltaY * unit);
-      }
+    const gap = now - lastWheelTime;
+    lastWheelTime = now;
+    const panel = panels.find((item) => item.dataset.panel === deck.dataset.active);
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? panel.clientHeight : 1;
+    const delta = event.deltaY * unit;
+    const magnitude = Math.abs(delta);
+    // Scatti separati della rotella, rispetto agli eventi ravvicinati del trackpad.
+    const wheelNotch = gap >= 50 && magnitude >= 40 &&
+      (event.deltaMode !== 0 || Math.abs(magnitude - lastWheelDelta) <= magnitude * 0.25);
+    // Un nuovo swipe sul trackpad, anche sopra l'inerzia del precedente: il delta risale.
+    const accelerating = gap < 160 && magnitude >= 20 && magnitude > lastWheelDelta * 2;
+    lastWheelDelta = magnitude;
+
+    if (panelAnimationFrame || now < navigationLockedUntil) {
+      wheelNavigation = null;
+      wheelTail = true;
       return;
     }
-    if (event.cancelable) event.preventDefault();
-    if (!wheelNavigation.next) wheelNavigation.direction = direction;
-    wheelNavigation.next = next;
-    wheelNavigation.distance = Math.max(0, wheelNavigation.distance + event.deltaY * unit * wheelNavigation.direction);
-    dragPanel(wheelNavigation, next, wheelNavigation.distance);
-    window.clearTimeout(wheelReleaseTimer);
-    wheelReleaseTimer = window.setTimeout(() => {
-      wheelNavigation.used = true;
-      releasePanelDrag();
-    }, 140);
-    if (panelDrag && panelDrag.progress >= 1) {
-      wheelNavigation.used = true;
-      releasePanelDrag();
+    if (wheelTail) {
+      // Lascia terminare i piccoli eventi residui; un impulso nuovo sblocca subito.
+      // L'inerzia residua (eventi ravvicinati e decrescenti) non scorre la nuova sezione;
+      // un nuovo swipe (delta che risale) o un nuovo scatto di rotella sblocca subito.
+      if (gap < 160 && !accelerating && !wheelNotch) return;
+      wheelTail = false;
+      wheelNavigation = null;
     }
+
+    const freshGesture = !wheelNavigation || gap > 160 ||
+      ((wheelNotch || accelerating) && !panelDrag) || wheelNavigation.panel !== panel;
+    if (freshGesture) {
+      wheelNavigation = { ...captureNavigation(), input: "wheel", distance: 0,
+        direction: Math.sign(delta), next: null };
+    }
+    const gesture = wheelNavigation;
+    // Il testo ha appena smesso di scorrere (o si sta ancora spingendo contro il bordo):
+    // lo scroll che arriva in fondo non deve anche cambiare sezione. Serve una pausa
+    // di almeno edgeCooldown ms senza input, poi un nuovo scroll.
+    // Un nuovo swipe netto (delta che risale con decisione) è ammesso dopo 250ms dall'ultimo
+    // movimento del testo, anche sopra l'inerzia del precedente.
+    const movedAgo = now - lastContentScrollTime;
+    const settling = !gesture.next && (accelerating
+      ? movedAgo < 250
+      : Math.min(movedAgo, now - lastEdgePush) < edgeCooldown);
+    const next = gesture.next || (settling ? null : adjacentPanel(gesture, Math.sign(delta)));
+    if (!next) {
+      const scrollBefore = panel.scrollTop;
+      routePanelScroll(panel, delta);
+      if (panel.scrollTop !== scrollBefore) lastContentScrollTime = now;
+      else if (settling && !accelerating) lastEdgePush = now;
+      return;
+    }
+    if (!gesture.next) gesture.direction = Math.sign(delta);
+    gesture.next = next;
+    gesture.distance = Math.max(0, gesture.distance + delta * gesture.direction);
+    dragPanel(gesture, next, gesture.distance);
+    window.clearTimeout(wheelReleaseTimer);
+    wheelReleaseTimer = window.setTimeout(() => releasePanelDrag(), 160);
+    // Conferma subito al raggiungimento della soglia, senza attendere la pausa.
+    if (panelDrag && panelDrag.progress >= panelDrag.commitProgress) releasePanelDrag();
   }, { passive: false, capture: true });
 
   window.addEventListener("resize", discardPanelDrag);
@@ -802,6 +935,13 @@
 
   window.addEventListener("resize", scheduleTitleCalibration);
   window.addEventListener("resize", scheduleBouncingLogoBounds);
+  window.addEventListener("resize", trackDockAnchor);
+  // Anche le transizioni CSS (hover/focus "peek" sul colophon) spostano il bordo.
+  deck.addEventListener("transitionrun", trackDockAnchor);
+  // Modalità moltiplicazione: i loghi a riposo seguono il colophon.
+  deck.addEventListener("dock-anchor-change", () => {
+    if (isLogoDocked) updateBouncingLogoBounds();
+  });
 
   calibrateTitleSize();
   buildSubmissionMarquee();

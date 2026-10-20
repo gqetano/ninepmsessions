@@ -107,6 +107,11 @@ button {
   transition: transform 520ms var(--ease);
 }
 
+/* Mentre segue il colophon il logo non deve inseguire con la transizione. */
+[data-bouncer-logo][data-docked="true"][data-dock-follow="true"] {
+  transition: none;
+}
+
 [data-bouncer-logo][data-restartable="true"] {
   pointer-events: auto;
 }
@@ -197,6 +202,7 @@ button {
 }
 
 .deck > section {
+  overflow-anchor: none;
   position: relative;
   min-height: 0;
   overflow: hidden;
@@ -774,8 +780,9 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
     transition-duration: 1ms;
   }
 
+  /* Con movimento ridotto la fascia resta ferma: 1ms + infinite sfarfallava. */
   [data-marquee-text] > div {
-    animation-duration: 1ms;
+    animation: none;
   }
 }
 

@@ -40,6 +40,16 @@
     form.addEventListener("reset", () => window.requestAnimationFrame(fitTextareas));
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTextareas);
 
+    // Chi incolla "open.spotify.com/..." senza schema: aggiungiamo https:// noi.
+    // Valori con un altro schema (ftp:, javascript:...) restano com'è e vengono rifiutati.
+    function normalizeUrl(field) {
+      if (field.type !== "url" || field.disabled) return false;
+      const value = field.value.trim();
+      if (!value || /^[a-z][a-z0-9+.-]*:/i.test(value) || !/^[^\s/:?#@]+\.[^\s/:?#@]+/.test(value)) return false;
+      field.value = `https://${value}`;
+      return true;
+    }
+
     function registerField(field) {
       fields.push(field);
       const row = document.createElement("div");
@@ -58,6 +68,9 @@
       field.addEventListener("input", () => {
         fitTextarea(field);
         if (field.hasAttribute("aria-invalid")) validateField(field);
+      });
+      field.addEventListener("blur", () => {
+        if (normalizeUrl(field) && field.hasAttribute("aria-invalid")) validateField(field);
       });
       field.addEventListener("focus", () => fitTextarea(field));
       fitTextarea(field);
@@ -185,6 +198,7 @@
       return !message;
     }
     function validateForm() {
+      fields.forEach(normalizeUrl);
       const invalid = Array.from(form.querySelectorAll(fieldSelector)).filter((field) => !validateField(field));
       if (!invalid.length) return true;
       result.textContent = "";
