@@ -517,6 +517,19 @@
         panel.scrollTop = 0;
       }
     });
+    updateScrollEnds();
+  }
+
+  // Fine testo: --more-below vale 1 finché c'è altro testo sotto e scende a 0
+  // negli ultimi pixel, così la sfumatura inferiore (styles.css) si spegne a fine testo.
+  function updateScrollEnd(panel) {
+    const remaining = panel.scrollHeight - panel.clientHeight - panel.scrollTop;
+    const amount = Math.min(1, Math.max(0, (remaining - 2) / 40));
+    panel.style.setProperty("--more-below", amount.toFixed(3));
+  }
+
+  function updateScrollEnds() {
+    panels.forEach(updateScrollEnd);
   }
 
   function animatePanelState(panelName, duration = panelDuration) {
@@ -932,6 +945,20 @@
   document.addEventListener("visibilitychange", resetSubmissionIdle);
   deck.addEventListener("logo-game-change", resetSubmissionIdle);
   reducedMotion.addEventListener("change", resetSubmissionIdle);
+
+  // La sfumatura di fine testo segue scroll, apertura delle sezioni, resize e campi che crescono.
+  document.addEventListener("scroll", (event) => {
+    if (panels.includes(event.target)) updateScrollEnd(event.target);
+  }, { passive: true, capture: true });
+  if (typeof ResizeObserver === "function") {
+    const scrollEndObserver = new ResizeObserver(updateScrollEnds);
+    panels.forEach((panel) => {
+      scrollEndObserver.observe(panel);
+      const content = panel.querySelector(":scope > .panel-content");
+      if (content) scrollEndObserver.observe(content);
+    });
+  }
+  window.addEventListener("resize", updateScrollEnds);
 
   window.addEventListener("resize", scheduleTitleCalibration);
   window.addEventListener("resize", scheduleBouncingLogoBounds);

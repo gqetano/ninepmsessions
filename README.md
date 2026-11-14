@@ -80,3 +80,11 @@ anche se ravvicinati. Gli eventi durante l’apertura vengono assorbiti e la
 coda di inerzia debole non scorre il contenuto in ingresso. Nessuno stato
 “used” mantiene bloccata indefinitamente la lettura. Al refresh l’HTML usa
 un riferimento versionato a script.js per evitare di provare codice in cache.
+
+## Fine testo
+Per far capire quando il testo di una sezione è finito: finché c'è altro testo
+sotto, le ultime righe visibili si dissolvono nel colore della sezione (come già
+accade sotto il titolo); a fine testo la sfumatura si spegne e l'ultima riga è
+seguita da uno spazio vuoto. Regolazioni in styles.css: --content-end-space
+(respiro dopo l'ultima riga) e --content-end-fade (altezza della sfumatura).
+script.js scrive --more-below (0–1) su ogni sezione in updateScrollEnd().
