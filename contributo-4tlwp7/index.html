@@ -14,14 +14,14 @@
     <style>
       /* Solo due fasce: il titolo del sito (chiuso) e la sezione Contributo (aperta). */
       .offer-deck { grid-template-rows: var(--home-row) 1fr; }
-      [data-panel="contributo"] { --panel-color: #ffc93f; }
+      [data-panel="contributo"] { --panel-color: #6ea8ff; }
       .offer-deck [data-panel="contributo"] > button { cursor: default; }
 
       .offer-small { font-size: var(--form-font-size); line-height: 1.2; }
       .offer-packages {
         grid-column: 2;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr);
         gap: var(--split-gap);
         min-width: 0;
       }
@@ -46,14 +46,13 @@
       }
       .offer-package dt { opacity: var(--form-muted-opacity); }
       .offer-package dd { margin: 0; }
-      .offer-notes { grid-column: 2; margin: 1.6rem 0 0; }
+      .offer-notes { margin: 1.2rem 0 0; }
       .offer-notes p { margin: 0; }
       .offer-notes p + p { margin-top: 0.6rem; }
       .panel-content a { color: inherit; text-underline-offset: 0.15em; text-decoration-thickness: 1px; }
 
       @media (max-width: 720px) {
-        .offer-packages { grid-column: auto; grid-template-columns: 1fr; row-gap: 2rem; }
-        .offer-notes { grid-column: auto; }
+        .offer-packages { grid-column: auto; }
       }
     </style>
   </head>
@@ -85,50 +84,45 @@
           </div>
 
           <div data-split-row="ruled">
-            <p data-split-title>Pacchetti</p>
+            <p data-split-title>Season 3</p>
             <p>
-              Proponiamo due pacchetti, diversi per contenuti ed esperienza
-              offerta. L’arrangiamento originale per quartetto è compreso in
-              entrambi.
+              Per la terza stagione registriamo in un nuovo spazio, Spazio
+              Liminali, con il supporto di due studi professionali: Chrome Hub
+              per le riprese e uno studio dedicato per il suono.
             </p>
           </div>
 
-          <div data-split-row="body">
+          <div data-split-row="ruled">
+            <p data-split-title>Pacchetto</p>
             <div class="offer-packages">
               <article class="offer-package">
-                <h2><span>In House</span> <span>250 €</span></h2>
-                <p class="offer-small">Una sessione compatta, registrata nello spazio in cui ci avete conosciuti e sostenuti fino ad oggi.</p>
+                <h2><span>Sessione 9PM</span> <span>400–450 €</span></h2>
+                <p class="offer-small">Un pacchetto unico: il tuo brano, per intero, riarrangiato e registrato con il quartetto.</p>
                 <dl class="offer-small">
-                  <div><dt>Durata</dt><dd>Estratto di circa 90 secondi</dd></div>
-                  <div><dt>Instagram, post</dt><dd>1 Reel verticale (90 sec. ca.)</dd></div>
-                  <div><dt>Instagram, storie</dt><dd>Notice + Backstage</dd></div>
-                  <div><dt>YouTube</dt><dd>Video integrale orizzontale</dd></div>
-                </dl>
-              </article>
-              <article class="offer-package">
-                <h2><span>In House Plus</span> <span>350 €</span></h2>
-                <p class="offer-small">Una versione estesa e più strutturata, sempre nel nostro studio casalingo.</p>
-                <dl class="offer-small">
+                  <div><dt>Arrangiamento</dt><dd>Originale per quartetto d’archi, sul brano intero</dd></div>
                   <div><dt>Durata</dt><dd>Brano intero</dd></div>
-                  <div><dt>Instagram, post</dt><dd>3 Reel verticali (vari tagli)</dd></div>
+                  <div><dt>Instagram, post</dt><dd>Reel verticali (vari tagli)</dd></div>
                   <div><dt>Instagram, storie</dt><dd>Notice + Backstage</dd></div>
                   <div><dt>YouTube</dt><dd>Video integrale orizzontale</dd></div>
+                  <div><dt>Riprese</dt><dd>Chrome Hub</dd></div>
+                  <div><dt>Suono</dt><dd>Studio professionale dedicato</dd></div>
                 </dl>
+                <div class="offer-notes offer-small">
+                  <p>Notice: la storia pubblicata il giorno prima dell’uscita.</p>
+                  <p>Backstage: la storia pubblicata il giorno dopo l’uscita.</p>
+                </div>
               </article>
-            </div>
-            <div class="offer-notes offer-small">
-              <p>Notice: la storia pubblicata il giorno prima dell’uscita.</p>
-              <p>Backstage: la storia pubblicata il giorno dopo l’uscita.</p>
             </div>
           </div>
 
           <div data-split-row="ruled">
             <p data-split-title>Etichette, booking, promoter</p>
             <p>
-              Se sei un’etichetta, un booking o un promoter, abbiamo creato dei
-              pacchetti collaborativi pensati per te e il tuo roster di artisti.
-              Scrivici: saremo felici di conoscerti, parlarne insieme e trovare
-              il modo giusto per collaborare.<br><br>
+              In una data registriamo in genere 4–5 artisti. Se sei
+              un’etichetta, un booking o un promoter e vuoi riservare un’intera
+              data per il tuo roster, possiamo venirti incontro con un
+              contributo agevolato. Scrivici: saremo felici di parlarne insieme
+              e trovare il modo giusto per collaborare.<br><br>
               <a href="mailto:9pmsessions@gmail.com">9pmsessions@gmail.com</a>
             </p>
           </div>
