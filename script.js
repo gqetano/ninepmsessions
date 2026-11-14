@@ -520,12 +520,38 @@
     updateScrollEnds();
   }
 
-  // Fine testo: --more-below vale 1 finché c'è altro testo sotto e scende a 0
-  // negli ultimi pixel, così la sfumatura inferiore (styles.css) si spegne a fine testo.
+  // Barra di scorrimento: una per sezione, fissa sotto il titolo. Il cursore è
+  // proporzionale al testo visibile e tocca il fondo quando il testo è finito.
+  const scrollBars = new Map();
+  panels.forEach((panel) => {
+    const tab = panel.querySelector(":scope > button");
+    if (panel.dataset.panel === "colophon" || !tab) return;
+    const bar = document.createElement("div");
+    bar.className = "scroll-bar";
+    bar.setAttribute("aria-hidden", "true");
+    bar.append(document.createElement("span"));
+    tab.after(bar);
+    scrollBars.set(panel, bar);
+  });
+
   function updateScrollEnd(panel) {
-    const remaining = panel.scrollHeight - panel.clientHeight - panel.scrollTop;
-    const amount = Math.min(1, Math.max(0, (remaining - 2) / 40));
-    panel.style.setProperty("--more-below", amount.toFixed(3));
+    const bar = scrollBars.get(panel);
+    if (!bar) return;
+    const tab = panel.querySelector(":scope > button");
+    const banner = panel.querySelector(":scope > [data-marquee-text]");
+    const header = tab.offsetHeight + (banner ? banner.offsetHeight : 0);
+    const inset = 8;
+    const track = panel.clientHeight - header - inset * 2;
+    const scrollable = panel.scrollHeight - panel.clientHeight;
+    const visible = scrollable > 2 && track > 40;
+    bar.dataset.visible = String(visible);
+    if (!visible) return;
+    const thumb = Math.max(24, track * (panel.clientHeight - header) / (panel.scrollHeight - header));
+    const offset = (track - thumb) * Math.min(1, Math.max(0, panel.scrollTop / scrollable));
+    bar.style.setProperty("--scroll-bar-top", `${header + inset}px`);
+    bar.style.setProperty("--scroll-bar-track", `${track.toFixed(1)}px`);
+    bar.style.setProperty("--scroll-bar-thumb", `${thumb.toFixed(1)}px`);
+    bar.style.setProperty("--scroll-bar-offset", `${offset.toFixed(1)}px`);
   }
 
   function updateScrollEnds() {
@@ -946,7 +972,7 @@
   deck.addEventListener("logo-game-change", resetSubmissionIdle);
   reducedMotion.addEventListener("change", resetSubmissionIdle);
 
-  // La sfumatura di fine testo segue scroll, apertura delle sezioni, resize e campi che crescono.
+  // La barra di scorrimento segue scroll, apertura delle sezioni, resize e campi che crescono.
   document.addEventListener("scroll", (event) => {
     if (panels.includes(event.target)) updateScrollEnd(event.target);
   }, { passive: true, capture: true });

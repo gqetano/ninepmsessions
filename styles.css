@@ -29,9 +29,6 @@
   --title-padding-bottom: calc(var(--title-margin) * 1.6);
   --title-line-height: 0.78;
   --title-fade-height: clamp(1rem, calc(var(--label-size) * 0.12), 2rem);
-  /* Fine testo: respiro dopo l'ultima riga e sfumatura finché c'è altro da leggere. */
-  --content-end-space: calc(var(--content-font-size) * 1.6);
-  --content-end-fade: calc(var(--content-font-size) * 1.5);
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --panel-duration: 700ms;
   --form-font-size: clamp(1rem, 1.35vw, 1.2rem);
@@ -219,28 +216,39 @@ button {
   overscroll-behavior-y: none;
 }
 
-/* Sfumatura inferiore: il testo si dissolve finché continua sotto e torna
-   netto, con spazio vuoto, quando è finito. --more-below (0–1) è scritto da script.js. */
-.deck > section:not([data-panel="colophon"])::after {
-  content: "";
+/* Barra di scorrimento della sezione aperta: disegnata da script.js
+   (updateScrollBar), mostra dove ci si trova e quando il testo è finito. */
+.scroll-bar {
   position: sticky;
-  bottom: 0;
-  z-index: 1;
-  display: block;
-  height: var(--content-end-fade);
-  margin-top: calc(-1 * var(--content-end-fade));
+  top: var(--scroll-bar-top, 0px);
+  z-index: 2;
+  height: 0;
   pointer-events: none;
   opacity: 0;
-  background: linear-gradient(
-    to top,
-    var(--panel-color) 0%,
-    var(--panel-color) 12%,
-    transparent 100%
-  );
 }
 
-.deck > section:not([data-panel="colophon"]):has(> button[aria-expanded="true"])::after {
-  opacity: var(--more-below, 0);
+.deck > section:has(> button[aria-expanded="true"]) > .scroll-bar[data-visible="true"] {
+  opacity: 1;
+}
+
+.scroll-bar > span {
+  position: absolute;
+  top: 0;
+  right: 7px;
+  width: 5px;
+  height: var(--scroll-bar-track, 0px);
+  background: linear-gradient(currentColor, currentColor) center / 1px 100% no-repeat;
+}
+
+.scroll-bar > span::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: var(--scroll-bar-thumb, 0px);
+  background: currentColor;
+  transform: translateY(var(--scroll-bar-offset, 0px));
 }
 
 [data-panel="home"] {
@@ -323,7 +331,7 @@ button {
   margin-left: var(--content-left);
   overflow: visible;
   padding-right: 0.35rem;
-  padding-bottom: var(--content-end-space);
+  padding-bottom: 1rem;
   font-size: var(--content-font-size);
   font-weight: 500;
   letter-spacing: 0;
@@ -771,6 +779,11 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
 
   .panel-content {
     line-height: 0.92;
+  }
+
+  .scroll-bar > span {
+    right: 1px;
+    width: 3px;
   }
 
   [data-marquee-text] {
