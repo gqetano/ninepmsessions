@@ -86,3 +86,11 @@ Gli scrollbar del browser sono nascosti; la sezione aperta ha una barra propria
 sul bordo destro (linea sottile + cursore nero), creata da script.js
 (updateScrollEnd) e disegnata in styles.css (.scroll-bar). Il cursore tocca il
 fondo quando il testo della sezione è finito. Non compare se il testo non scorre.
+
+## Pagina riservata "Contributo"
+contributo-4tlwp7/index.html: pagina con i pacchetti e il contributo, da inviare
+agli artisti selezionati. Non è collegata da nessuna parte del sito e ha il meta
+robots noindex; si raggiunge solo con il link diretto. Non è protetta da password:
+chi ha il link (o guarda il repository, che è pubblico) può aprirla.
+Usa styles.css del sito; stili e script propri sono dentro la pagina stessa.
+Per cambiare il link basta rinominare la cartella.

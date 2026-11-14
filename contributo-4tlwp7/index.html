@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ff4f2e">
+    <!-- Pagina riservata: non è collegata dal sito e non va indicizzata. -->
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>NINEPMSESSIONS — Contributo</title>
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico?v=3" sizes="16x16 32x32 48x48 64x64">
+    <link rel="icon" type="image/png" href="../assets/favicon.png?v=3" sizes="512x512">
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=3" sizes="any">
+    <link rel="stylesheet" href="../styles.css?v=scrollbar-20261114-2">
+    <style>
+      /* Solo due fasce: il titolo del sito (chiuso) e la sezione Contributo (aperta). */
+      .offer-deck { grid-template-rows: var(--home-row) 1fr; }
+      [data-panel="contributo"] { --panel-color: #ffc93f; }
+      .offer-deck [data-panel="contributo"] > button { cursor: default; }
+
+      .offer-small { font-size: var(--form-font-size); line-height: 1.2; }
+      .offer-packages {
+        grid-column: 2;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--split-gap);
+        min-width: 0;
+      }
+      .offer-package { min-width: 0; }
+      .offer-package h2 {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.5em;
+        margin: 0;
+        font: inherit;
+      }
+      .offer-package h2 span:last-child { white-space: nowrap; }
+      .offer-package > p { margin: 0.9rem 0 1.1rem; }
+      .offer-package dl { margin: 0; border-top: 1px solid currentColor; }
+      .offer-package dl > div {
+        display: grid;
+        grid-template-columns: minmax(0, 42fr) minmax(0, 58fr);
+        column-gap: 0.75rem;
+        padding: 0.45rem 0;
+        border-bottom: 1px solid currentColor;
+      }
+      .offer-package dt { opacity: var(--form-muted-opacity); }
+      .offer-package dd { margin: 0; }
+      .offer-notes { grid-column: 2; margin: 1.6rem 0 0; }
+      .offer-notes p { margin: 0; }
+      .offer-notes p + p { margin-top: 0.6rem; }
+      .panel-content a { color: inherit; text-underline-offset: 0.15em; text-decoration-thickness: 1px; }
+
+      @media (max-width: 720px) {
+        .offer-packages { grid-column: auto; grid-template-columns: 1fr; row-gap: 2rem; }
+        .offer-notes { grid-column: auto; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="deck offer-deck" data-active="contributo" aria-label="Contributo e pacchetti">
+      <section data-panel="home">
+        <button type="button" aria-expanded="false" data-home-link aria-label="Vai al sito 9PM Sessions">
+          <span>NINEPM·SESSIONS</span>
+        </button>
+      </section>
+
+      <section data-panel="contributo">
+        <button type="button" aria-expanded="true" aria-controls="content-contributo">
+          <span>CONTRIBUTO</span>
+        </button>
+        <div class="scroll-bar" aria-hidden="true"><span></span></div>
+        <div id="content-contributo" class="panel-content">
+          <div data-split-row="body">
+            <p>
+              9PM è un progetto completamente indipendente, e ci teniamo che
+              rimanga tale. Lo portiamo avanti con passione, cura e risorse
+              proprie, per creare uno spazio libero, autentico e sostenibile in
+              cui la musica possa respirare.<br><br>
+              Per questo chiediamo un contributo alle progettualità selezionate.
+              Si tratta di una cifra simbolica che ci permette di coprire, almeno
+              in parte, i costi vivi di produzione, mantenendo la qualità del
+              lavoro dignitosa con la libertà creativa che ci contraddistingue.
+            </p>
+          </div>
+
+          <div data-split-row="ruled">
+            <p data-split-title>Pacchetti</p>
+            <p>
+              Proponiamo due pacchetti, diversi per contenuti ed esperienza
+              offerta. L’arrangiamento originale per quartetto è compreso in
+              entrambi.
+            </p>
+          </div>
+
+          <div data-split-row="body">
+            <div class="offer-packages">
+              <article class="offer-package">
+                <h2><span>In House</span> <span>250 €</span></h2>
+                <p class="offer-small">Una sessione compatta, registrata nello spazio in cui ci avete conosciuti e sostenuti fino ad oggi.</p>
+                <dl class="offer-small">
+                  <div><dt>Durata</dt><dd>Estratto di circa 90 secondi</dd></div>
+                  <div><dt>Instagram, post</dt><dd>1 Reel verticale (90 sec. ca.)</dd></div>
+                  <div><dt>Instagram, storie</dt><dd>Notice + Backstage</dd></div>
+                  <div><dt>YouTube</dt><dd>Video integrale orizzontale</dd></div>
+                </dl>
+              </article>
+              <article class="offer-package">
+                <h2><span>In House Plus</span> <span>350 €</span></h2>
+                <p class="offer-small">Una versione estesa e più strutturata, sempre nel nostro studio casalingo.</p>
+                <dl class="offer-small">
+                  <div><dt>Durata</dt><dd>Brano intero</dd></div>
+                  <div><dt>Instagram, post</dt><dd>3 Reel verticali (vari tagli)</dd></div>
+                  <div><dt>Instagram, storie</dt><dd>Notice + Backstage</dd></div>
+                  <div><dt>YouTube</dt><dd>Video integrale orizzontale</dd></div>
+                </dl>
+              </article>
+            </div>
+            <div class="offer-notes offer-small">
+              <p>Notice: la storia pubblicata il giorno prima dell’uscita.</p>
+              <p>Backstage: la storia pubblicata il giorno dopo l’uscita.</p>
+            </div>
+          </div>
+
+          <div data-split-row="ruled">
+            <p data-split-title>Etichette, booking, promoter</p>
+            <p>
+              Se sei un’etichetta, un booking o un promoter, abbiamo creato dei
+              pacchetti collaborativi pensati per te e il tuo roster di artisti.
+              Scrivici: saremo felici di conoscerti, parlarne insieme e trovare
+              il modo giusto per collaborare.<br><br>
+              <a href="mailto:9pmsessions@gmail.com">9pmsessions@gmail.com</a>
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        const root = document.documentElement;
+        const deck = document.querySelector(".deck");
+        const panel = document.querySelector('[data-panel="contributo"]');
+        const bar = panel.querySelector(".scroll-bar");
+        const tab = panel.querySelector(":scope > button");
+
+        document.querySelector("[data-home-link]").addEventListener("click", () => {
+          location.href = "../";
+        });
+
+        // Stessa calibrazione del sito: il titolo NINEPM·SESSIONS riempie la larghezza.
+        function calibrateTitleSize() {
+          const referenceTab = document.querySelector("[data-panel] > button");
+          const referenceTitle = referenceTab.querySelector("span");
+          const style = getComputedStyle(referenceTitle);
+          const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+          const available = Math.max(1, referenceTab.clientWidth - padding);
+          root.style.setProperty("--label-size", "100px");
+          const measured = Math.max(1, referenceTitle.getBoundingClientRect().width - padding);
+          root.style.setProperty("--label-size", `${((available / measured) * 100).toFixed(4)}px`);
+          updateScrollBar();
+        }
+
+        // Stessa barra di scorrimento del sito.
+        function updateScrollBar() {
+          const header = tab.offsetHeight;
+          const inset = 8;
+          const track = panel.clientHeight - header - inset * 2;
+          const scrollable = panel.scrollHeight - panel.clientHeight;
+          const visible = scrollable > 2 && track > 40;
+          bar.dataset.visible = String(visible);
+          if (!visible) return;
+          const thumb = Math.max(24, track * (panel.clientHeight - header) / (panel.scrollHeight - header));
+          const offset = (track - thumb) * Math.min(1, Math.max(0, panel.scrollTop / scrollable));
+          bar.style.setProperty("--scroll-bar-top", `${header + inset}px`);
+          bar.style.setProperty("--scroll-bar-track", `${track.toFixed(1)}px`);
+          bar.style.setProperty("--scroll-bar-thumb", `${thumb.toFixed(1)}px`);
+          bar.style.setProperty("--scroll-bar-offset", `${offset.toFixed(1)}px`);
+        }
+
+        panel.addEventListener("scroll", updateScrollBar, { passive: true });
+        window.addEventListener("resize", calibrateTitleSize);
+        deck.addEventListener("transitionend", updateScrollBar);
+        if (typeof ResizeObserver === "function") new ResizeObserver(updateScrollBar).observe(panel);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(calibrateTitleSize);
+        calibrateTitleSize();
+      })();
+    </script>
+    <script data-goatcounter="https://9pmsessions.goatcounter.com/count"
+            async src="https://gc.zgo.at/count.js"></script>
+  </body>
+</html>
