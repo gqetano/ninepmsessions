@@ -234,8 +234,8 @@ button {
 .scroll-bar > span {
   position: absolute;
   top: 0;
-  right: 7px;
-  width: 5px;
+  right: 5px;
+  width: 10px;
   height: var(--scroll-bar-track, 0px);
   background: linear-gradient(currentColor, currentColor) center / 1px 100% no-repeat;
 }
@@ -783,7 +783,7 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
 
   .scroll-bar > span {
     right: 1px;
-    width: 3px;
+    width: 5px;
   }
 
   [data-marquee-text] {
