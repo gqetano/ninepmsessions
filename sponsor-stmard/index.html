@@ -44,6 +44,17 @@
         .pitch:not([data-panel-drag]):not([data-active="season"]):has([data-panel="season"]:not([data-peek-dismissed]):hover) { --season-row: calc(var(--peek-row) + var(--season-banner-height, 0px)); }
         .pitch:not([data-panel-drag]):not([data-active="sponsor"]):has([data-panel="sponsor"]:not([data-peek-dismissed]):hover) { --sponsor-row: calc(var(--peek-row) + var(--sponsor-banner-height, 0px)); }
       }
+      .pitch-photos {
+        grid-column: 2;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.5rem;
+        margin: 0;
+      }
+      .pitch-photos img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; }
+      @media (max-width: 720px) {
+        .pitch-photos { grid-column: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
       .pitch-small { font-size: var(--form-font-size); line-height: 1.2; opacity: var(--form-muted-opacity); }
       .pitch [data-split-title] { white-space: nowrap; }
       .panel-content a { color: inherit; text-underline-offset: 0.15em; text-decoration-thickness: 1px; }
@@ -77,6 +88,14 @@
             <p>
               9PM nasce a Roma alla fine del 2024 da un quartetto d’archi: Amalia Candido e Giulia Gentile ai violini, Luicelis Vasquez alla viola, Livia De Romanis al violoncello. Una formazione classica e una curiosità dichiarata per pop, indie, elettronica e jazz.
             </p>
+          </div>
+          <div data-split-row="body">
+            <div class="pitch-photos">
+              <img src="img/sessione-1.jpg" alt="Una sessione di 9PM: il quartetto d’archi e l’artista ospite" loading="lazy">
+              <img src="img/sessione-2.jpg" alt="Un’artista ospite durante una sessione" loading="lazy">
+              <img src="img/sessione-3.jpg" alt="Un’artista ospite con il quartetto alle spalle" loading="lazy">
+              <img src="img/quartetto.jpg" alt="Due musiciste del quartetto durante una registrazione" loading="lazy">
+            </div>
           </div>
           <div data-split-row="ruled">
             <p data-split-title>Format</p>
