@@ -104,10 +104,3 @@ Lo stile grande è lo stesso per tutti (font: inherit sul heading, dimensione su
 Attenzione: il contenuto della sezione aperta diventa cliccabile grazie alla regola
 ".panel-title:has(> button[aria-expanded="true"]) ~ .panel-content" in styles.css.
 Se si aggiungono elementi tra titolo e contenuto, verificare che il form resti cliccabile.
-
-## Presentazione per sponsor (pagina riservata)
-sponsor-stmard/index.html: presentazione del progetto per sponsor privati, con lo stesso
-meccanismo del sito (usa ../styles.css e ../script.js). Sezioni: NINEPM·SESSIONS,
-Progetto, Numeri, Season 3, Sponsor. Non collegata dal sito, meta robots noindex,
-raggiungibile solo con il link diretto; non è protetta da password.
-I numeri vengono dagli Insights Instagram dei singoli Reel (novembre 2026).
