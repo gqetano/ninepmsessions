@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#6ea8ff">
+    <meta name="theme-color" content="#ff4f2e">
     <!-- Side B: pagina riservata, non collegata dal sito e da non indicizzare. -->
     <meta name="robots" content="noindex, nofollow, noarchive">
     <title>NINEPMSESSIONS — Side B</title>
@@ -13,37 +13,31 @@
     <link rel="stylesheet" href="../styles.css?v=headings-20261115-1">
     <style>
       /* Side B: stesso meccanismo del sito (styles.css + script.js), sezioni e colori propri. */
-      :root { --page-background: #6ea8ff; }
+      /* Home nell'arancione del sito; le altre sezioni in scala di grigi. */
       .side-b {
         --contributo-row: calc(var(--closed-row) + var(--contributo-banner-height, 0px));
-        --spazio-row: calc(var(--closed-row) + var(--spazio-banner-height, 0px));
-        --autorizzazioni-row: calc(var(--closed-row) + var(--autorizzazioni-banner-height, 0px));
-        --progetti-row: calc(var(--closed-row) + var(--progetti-banner-height, 0px));
+        --location-row: calc(var(--closed-row) + var(--location-banner-height, 0px));
+        --liberatorie-row: calc(var(--closed-row) + var(--liberatorie-banner-height, 0px));
         grid-template-rows:
           var(--home-row)
           var(--contributo-row)
-          var(--spazio-row)
-          var(--autorizzazioni-row)
-          var(--progetti-row);
+          var(--location-row)
+          var(--liberatorie-row);
       }
       .side-b[data-active="contributo"] { --contributo-row: 1fr; }
-      .side-b[data-active="spazio"] { --spazio-row: 1fr; }
-      .side-b[data-active="autorizzazioni"] { --autorizzazioni-row: 1fr; }
-      .side-b[data-active="progetti"] { --progetti-row: 1fr; }
-      .side-b [data-panel="home"] { --panel-color: #6ea8ff; }
-      .side-b [data-panel="contributo"] { --panel-color: #b9ef6a; }
-      .side-b [data-panel="spazio"] { --panel-color: #cbbcff; }
-      .side-b [data-panel="autorizzazioni"] { --panel-color: #f3eee2; }
-      .side-b [data-panel="progetti"] { --panel-color: #5fd3c2; }
+      .side-b[data-active="location"] { --location-row: 1fr; }
+      .side-b[data-active="liberatorie"] { --liberatorie-row: 1fr; }
+      .side-b [data-panel="home"] { --panel-color: var(--home); }
+      .side-b [data-panel="contributo"] { --panel-color: #e9e9e9; }
+      .side-b [data-panel="location"] { --panel-color: #d2d2d2; }
+      .side-b [data-panel="liberatorie"] { --panel-color: #bbbbbb; }
       .side-b:not([data-panel-drag]):not([data-active="contributo"]):has([data-panel="contributo"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --contributo-row: calc(var(--peek-row) + var(--contributo-banner-height, 0px)); }
-      .side-b:not([data-panel-drag]):not([data-active="spazio"]):has([data-panel="spazio"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --spazio-row: calc(var(--peek-row) + var(--spazio-banner-height, 0px)); }
-      .side-b:not([data-panel-drag]):not([data-active="autorizzazioni"]):has([data-panel="autorizzazioni"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --autorizzazioni-row: calc(var(--peek-row) + var(--autorizzazioni-banner-height, 0px)); }
-      .side-b:not([data-panel-drag]):not([data-active="progetti"]):has([data-panel="progetti"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --progetti-row: calc(var(--peek-row) + var(--progetti-banner-height, 0px)); }
+      .side-b:not([data-panel-drag]):not([data-active="location"]):has([data-panel="location"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --location-row: calc(var(--peek-row) + var(--location-banner-height, 0px)); }
+      .side-b:not([data-panel-drag]):not([data-active="liberatorie"]):has([data-panel="liberatorie"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --liberatorie-row: calc(var(--peek-row) + var(--liberatorie-banner-height, 0px)); }
       @media (hover: hover) {
         .side-b:not([data-panel-drag]):not([data-active="contributo"]):has([data-panel="contributo"]:not([data-peek-dismissed]):hover) { --contributo-row: calc(var(--peek-row) + var(--contributo-banner-height, 0px)); }
-        .side-b:not([data-panel-drag]):not([data-active="spazio"]):has([data-panel="spazio"]:not([data-peek-dismissed]):hover) { --spazio-row: calc(var(--peek-row) + var(--spazio-banner-height, 0px)); }
-        .side-b:not([data-panel-drag]):not([data-active="autorizzazioni"]):has([data-panel="autorizzazioni"]:not([data-peek-dismissed]):hover) { --autorizzazioni-row: calc(var(--peek-row) + var(--autorizzazioni-banner-height, 0px)); }
-        .side-b:not([data-panel-drag]):not([data-active="progetti"]):has([data-panel="progetti"]:not([data-peek-dismissed]):hover) { --progetti-row: calc(var(--peek-row) + var(--progetti-banner-height, 0px)); }
+        .side-b:not([data-panel-drag]):not([data-active="location"]):has([data-panel="location"]:not([data-peek-dismissed]):hover) { --location-row: calc(var(--peek-row) + var(--location-banner-height, 0px)); }
+        .side-b:not([data-panel-drag]):not([data-active="liberatorie"]):has([data-panel="liberatorie"]:not([data-peek-dismissed]):hover) { --liberatorie-row: calc(var(--peek-row) + var(--liberatorie-banner-height, 0px)); }
       }
 
       .offer-small { font-size: var(--form-font-size); line-height: 1.2; }
@@ -109,14 +103,9 @@
               Side B.<br><br>
               Se sei qui, il tuo progetto è stato selezionato: questa è la
               seconda parte del percorso. In queste pagine trovi quello che
-              serve per organizzare la sessione: il contributo, il nuovo spazio
-              in cui registriamo, le autorizzazioni da firmare e i progetti
-              speciali.
+              serve per organizzare la sessione: il contributo, la nuova location
+              in cui registriamo e le liberatorie da firmare.
             </p>
-          </div>
-          <div data-split-row="ruled">
-            <p data-split-title>Sito</p>
-            <p><a href="../">Torna a 9PM Sessions</a></p>
           </div>
         </div>
       </section>
@@ -159,13 +148,13 @@
         </div>
       </section>
 
-      <section data-panel="spazio">
+      <section data-panel="location">
         <h2 class="panel-title">
-          <button type="button" aria-expanded="false" aria-controls="content-spazio">
-            <span>SPAZIO</span>
+          <button type="button" aria-expanded="false" aria-controls="content-location">
+            <span>LOCATION</span>
           </button>
         </h2>
-        <div id="content-spazio" class="panel-content">
+        <div id="content-location" class="panel-content">
           <div data-split-row="body">
             <p>
               Per la terza stagione registriamo in un nuovo spazio, Spazio
@@ -184,17 +173,17 @@
         </div>
       </section>
 
-      <section data-panel="autorizzazioni">
+      <section data-panel="liberatorie">
         <h2 class="panel-title">
-          <button type="button" aria-expanded="false" aria-controls="content-autorizzazioni">
-            <span>AUTORIZZAZIONI</span>
+          <button type="button" aria-expanded="false" aria-controls="content-liberatorie">
+            <span>LIBERATORIE</span>
           </button>
         </h2>
-        <div id="content-autorizzazioni" class="panel-content">
+        <div id="content-liberatorie" class="panel-content">
           <div data-split-row="body">
             <p>
               Prima della sessione ti chiederemo di firmare alcune
-              autorizzazioni. Qui troverai i documenti da scaricare, firmare e
+              liberatorie. Qui troverai i documenti da scaricare, firmare e
               rimandarci.
             </p>
           </div>
@@ -204,24 +193,6 @@
               <li><span>Diritti d’immagine</span><span class="offer-muted">PDF in arrivo</span></li>
               <li><span>Diritti sul brano</span><span class="offer-muted">PDF in arrivo</span></li>
             </ul>
-          </div>
-        </div>
-      </section>
-
-      <section data-panel="progetti">
-        <h2 class="panel-title">
-          <button type="button" aria-expanded="false" aria-controls="content-progetti">
-            <span>SPECIALI</span>
-          </button>
-        </h2>
-        <div id="content-progetti" class="panel-content">
-          <div data-split-row="body">
-            <p>
-              In una data registriamo in genere 4–5 artisti.<br><br>
-              Per etichette, booking e promoter che vogliono riservare
-              un’intera data al proprio roster è previsto un contributo
-              agevolato. Le condizioni si definiscono caso per caso.
-            </p>
           </div>
         </div>
       </section>

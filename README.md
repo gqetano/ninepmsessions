@@ -90,7 +90,7 @@ fondo quando il testo della sezione è finito. Non compare se il testo non scorr
 ## Side B (pagina riservata)
 contributo-4tlwp7/index.html: mini-sito per gli artisti selezionati, con lo stesso
 meccanismo del sito (usa ../styles.css e ../script.js) ma sezioni e colori propri:
-NINEPM·SESSIONS, Contributo, Spazio, Autorizzazioni, Speciali.
+NINEPM·SESSIONS (arancione del sito), Contributo, Location, Liberatorie (scala di grigi).
 Righe della griglia, colori e regole "peek" delle sue sezioni sono nello <style> della pagina.
 Non è collegato da nessuna parte del sito e ha il meta robots noindex; si raggiunge
 solo con il link diretto. Non è protetto da password: chi ha il link (o guarda il
