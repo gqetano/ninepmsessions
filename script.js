@@ -929,6 +929,8 @@
       const editing = document.activeElement && document.activeElement.closest("input, textarea, select, [contenteditable]");
       if (["submissions", "colophon"].includes(deck.dataset.active) || deck.dataset.logoGame === "active" || panelAnimationFrame || panelDrag || editing) return;
       const submissionPanel = panels.find((panel) => panel.dataset.panel === "submissions");
+      // Le pagine senza sezione Submissions (Side B) non hanno niente da richiamare.
+      if (!submissionPanel) return;
       const title = submissionPanel.querySelector("button");
       const banner = submissionPanel.querySelector(":scope > [data-marquee-text]");
       const distance = Math.max(0, title.offsetHeight + (banner ? banner.offsetHeight : 0) - submissionPanel.clientHeight);

@@ -3,30 +3,52 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#ff4f2e">
-    <!-- Pagina riservata: non è collegata dal sito e non va indicizzata. -->
+    <meta name="theme-color" content="#6ea8ff">
+    <!-- Side B: pagina riservata, non collegata dal sito e da non indicizzare. -->
     <meta name="robots" content="noindex, nofollow, noarchive">
-    <title>NINEPMSESSIONS — Contributo</title>
+    <title>NINEPMSESSIONS — Side B</title>
     <link rel="icon" type="image/x-icon" href="../assets/favicon.ico?v=3" sizes="16x16 32x32 48x48 64x64">
     <link rel="icon" type="image/png" href="../assets/favicon.png?v=3" sizes="512x512">
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=3" sizes="any">
     <link rel="stylesheet" href="../styles.css?v=headings-20261115-1">
     <style>
-      /* Solo due fasce: il titolo del sito (chiuso) e la sezione Contributo (aperta). */
-      .offer-deck { grid-template-rows: var(--home-row) 1fr; }
-      [data-panel="contributo"] { --panel-color: #6ea8ff; }
-      .offer-deck [data-panel="contributo"] > .panel-title > button { cursor: default; }
+      /* Side B: stesso meccanismo del sito (styles.css + script.js), sezioni e colori propri. */
+      :root { --page-background: #6ea8ff; }
+      .side-b {
+        --contributo-row: calc(var(--closed-row) + var(--contributo-banner-height, 0px));
+        --spazio-row: calc(var(--closed-row) + var(--spazio-banner-height, 0px));
+        --autorizzazioni-row: calc(var(--closed-row) + var(--autorizzazioni-banner-height, 0px));
+        --progetti-row: calc(var(--closed-row) + var(--progetti-banner-height, 0px));
+        grid-template-rows:
+          var(--home-row)
+          var(--contributo-row)
+          var(--spazio-row)
+          var(--autorizzazioni-row)
+          var(--progetti-row);
+      }
+      .side-b[data-active="contributo"] { --contributo-row: 1fr; }
+      .side-b[data-active="spazio"] { --spazio-row: 1fr; }
+      .side-b[data-active="autorizzazioni"] { --autorizzazioni-row: 1fr; }
+      .side-b[data-active="progetti"] { --progetti-row: 1fr; }
+      .side-b [data-panel="home"] { --panel-color: #6ea8ff; }
+      .side-b [data-panel="contributo"] { --panel-color: #b9ef6a; }
+      .side-b [data-panel="spazio"] { --panel-color: #cbbcff; }
+      .side-b [data-panel="autorizzazioni"] { --panel-color: #f3eee2; }
+      .side-b [data-panel="progetti"] { --panel-color: #5fd3c2; }
+      .side-b:not([data-panel-drag]):not([data-active="contributo"]):has([data-panel="contributo"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --contributo-row: calc(var(--peek-row) + var(--contributo-banner-height, 0px)); }
+      .side-b:not([data-panel-drag]):not([data-active="spazio"]):has([data-panel="spazio"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --spazio-row: calc(var(--peek-row) + var(--spazio-banner-height, 0px)); }
+      .side-b:not([data-panel-drag]):not([data-active="autorizzazioni"]):has([data-panel="autorizzazioni"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --autorizzazioni-row: calc(var(--peek-row) + var(--autorizzazioni-banner-height, 0px)); }
+      .side-b:not([data-panel-drag]):not([data-active="progetti"]):has([data-panel="progetti"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --progetti-row: calc(var(--peek-row) + var(--progetti-banner-height, 0px)); }
+      @media (hover: hover) {
+        .side-b:not([data-panel-drag]):not([data-active="contributo"]):has([data-panel="contributo"]:not([data-peek-dismissed]):hover) { --contributo-row: calc(var(--peek-row) + var(--contributo-banner-height, 0px)); }
+        .side-b:not([data-panel-drag]):not([data-active="spazio"]):has([data-panel="spazio"]:not([data-peek-dismissed]):hover) { --spazio-row: calc(var(--peek-row) + var(--spazio-banner-height, 0px)); }
+        .side-b:not([data-panel-drag]):not([data-active="autorizzazioni"]):has([data-panel="autorizzazioni"]:not([data-peek-dismissed]):hover) { --autorizzazioni-row: calc(var(--peek-row) + var(--autorizzazioni-banner-height, 0px)); }
+        .side-b:not([data-panel-drag]):not([data-active="progetti"]):has([data-panel="progetti"]:not([data-peek-dismissed]):hover) { --progetti-row: calc(var(--peek-row) + var(--progetti-banner-height, 0px)); }
+      }
 
       .offer-small { font-size: var(--form-font-size); line-height: 1.2; }
-      .offer-packages {
-        grid-column: 2;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        gap: var(--split-gap);
-        min-width: 0;
-      }
-      .offer-package { min-width: 0; }
-      .offer-package h2 {
+      .offer-package { grid-column: 2; min-width: 0; }
+      .offer-package h3 {
         display: flex;
         justify-content: space-between;
         align-items: baseline;
@@ -34,154 +56,178 @@
         margin: 0;
         font: inherit;
       }
-      .offer-package h2 span:last-child { white-space: nowrap; }
+      .offer-package h3 span:last-child { white-space: nowrap; }
       .offer-package > p { margin: 0.9rem 0 1.1rem; }
-      .offer-package dl { margin: 0; border-top: 1px solid currentColor; }
-      .offer-package dl > div {
+      .offer-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid currentColor; }
+      .offer-list > div, .offer-list > li {
         display: grid;
         grid-template-columns: minmax(0, 42fr) minmax(0, 58fr);
         column-gap: 0.75rem;
         padding: 0.45rem 0;
         border-bottom: 1px solid currentColor;
       }
-      .offer-package dt { opacity: var(--form-muted-opacity); }
-      .offer-package dd { margin: 0; }
+      .offer-list dt, .offer-list .offer-muted { opacity: var(--form-muted-opacity); }
+      .offer-list dd { margin: 0; }
       .offer-notes { margin: 1.2rem 0 0; }
       .offer-notes p { margin: 0; }
       .offer-notes p + p { margin-top: 0.6rem; }
+      .offer-photos {
+        grid-column: 2;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin: 0;
+      }
+      .offer-photos > * {
+        aspect-ratio: 4 / 5;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        border: 1px solid currentColor;
+        text-align: center;
+      }
+      .offer-photos img { width: 100%; height: 100%; object-fit: cover; border: 0; }
       .panel-content a { color: inherit; text-underline-offset: 0.15em; text-decoration-thickness: 1px; }
 
       @media (max-width: 720px) {
-        .offer-packages { grid-column: auto; }
+        .offer-package, .offer-photos { grid-column: auto; }
+        .offer-photos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
     </style>
   </head>
   <body>
-    <main class="deck offer-deck" data-active="contributo" aria-label="Contributo e pacchetti">
+    <main class="deck side-b" data-logo-game-enabled="false" data-scroll-navigation="experimental" data-active="home" aria-label="Side B: navigazione a schede">
       <section data-panel="home">
         <h1 class="panel-title">
-          <button type="button" aria-expanded="false" data-home-link aria-label="Vai al sito 9PM Sessions">
+          <button type="button" aria-expanded="true" aria-controls="content-home">
             <span>NINEPM·SESSIONS</span>
           </button>
         </h1>
+        <div id="content-home" class="panel-content">
+          <div data-split-row="body">
+            <p>
+              Side B.<br><br>
+              Se sei qui, il tuo progetto è stato selezionato: questa è la
+              seconda parte del percorso. In queste pagine trovi quello che
+              serve per organizzare la sessione: il contributo, il nuovo spazio
+              in cui registriamo, le autorizzazioni da firmare e i progetti
+              speciali.
+            </p>
+          </div>
+          <div data-split-row="ruled">
+            <p data-split-title>Sito</p>
+            <p><a href="../">Torna a 9PM Sessions</a></p>
+          </div>
+        </div>
       </section>
 
       <section data-panel="contributo">
         <h2 class="panel-title">
-          <button type="button" aria-expanded="true" aria-controls="content-contributo">
+          <button type="button" aria-expanded="false" aria-controls="content-contributo">
             <span>CONTRIBUTO</span>
           </button>
         </h2>
-        <div class="scroll-bar" aria-hidden="true"><span></span></div>
         <div id="content-contributo" class="panel-content">
           <div data-split-row="body">
             <p>
               9PM è un progetto completamente indipendente, e ci teniamo che
-              rimanga tale. Lo portiamo avanti con passione, cura e risorse
-              proprie, per creare uno spazio libero, autentico e sostenibile in
-              cui la musica possa respirare.<br><br>
-              Per questo chiediamo alle progettualità selezionate un contributo
-              che ci permette di coprire i costi vivi di produzione.
+              rimanga tale. Per questo chiediamo alle progettualità selezionate
+              un contributo che ci permette di coprire i costi vivi di
+              produzione.
             </p>
           </div>
-
           <div data-split-row="ruled">
-            <p data-split-title>Season 3</p>
+            <p data-split-title>Pacchetto</p>
+            <article class="offer-package">
+              <h3><span>Sessione 9PM</span> <span>450 €</span></h3>
+              <p class="offer-small">Un pacchetto unico: il tuo brano, per intero, riarrangiato e registrato con il quartetto.</p>
+              <dl class="offer-list offer-small">
+                <div><dt>Arrangiamento</dt><dd>Originale per quartetto d’archi, sul brano intero</dd></div>
+                <div><dt>Durata</dt><dd>Brano intero</dd></div>
+                <div><dt>Instagram, post</dt><dd>Reel verticali (vari tagli)</dd></div>
+                <div><dt>Instagram, storie</dt><dd>Notice + Backstage</dd></div>
+                <div><dt>YouTube</dt><dd>Video integrale orizzontale</dd></div>
+                <div><dt>Riprese</dt><dd>Chrome Hub</dd></div>
+                <div><dt>Suono</dt><dd>Studio professionale dedicato</dd></div>
+              </dl>
+              <div class="offer-notes offer-small">
+                <p>Notice: la storia pubblicata il giorno prima dell’uscita.</p>
+                <p>Backstage: la storia pubblicata il giorno dopo l’uscita.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section data-panel="spazio">
+        <h2 class="panel-title">
+          <button type="button" aria-expanded="false" aria-controls="content-spazio">
+            <span>SPAZIO</span>
+          </button>
+        </h2>
+        <div id="content-spazio" class="panel-content">
+          <div data-split-row="body">
             <p>
               Per la terza stagione registriamo in un nuovo spazio, Spazio
               Liminali, con il supporto di due studi professionali: Chrome Hub
               per le riprese e uno studio dedicato per il suono.
             </p>
           </div>
-
           <div data-split-row="ruled">
-            <p data-split-title>Pacchetto</p>
-            <div class="offer-packages">
-              <article class="offer-package">
-                <h2><span>Sessione 9PM</span> <span>450 €</span></h2>
-                <p class="offer-small">Un pacchetto unico: il tuo brano, per intero, riarrangiato e registrato con il quartetto.</p>
-                <dl class="offer-small">
-                  <div><dt>Arrangiamento</dt><dd>Originale per quartetto d’archi, sul brano intero</dd></div>
-                  <div><dt>Durata</dt><dd>Brano intero</dd></div>
-                  <div><dt>Instagram, post</dt><dd>Reel verticali (vari tagli)</dd></div>
-                  <div><dt>Instagram, storie</dt><dd>Notice + Backstage</dd></div>
-                  <div><dt>YouTube</dt><dd>Video integrale orizzontale</dd></div>
-                  <div><dt>Riprese</dt><dd>Chrome Hub</dd></div>
-                  <div><dt>Suono</dt><dd>Studio professionale dedicato</dd></div>
-                </dl>
-                <div class="offer-notes offer-small">
-                  <p>Notice: la storia pubblicata il giorno prima dell’uscita.</p>
-                  <p>Backstage: la storia pubblicata il giorno dopo l’uscita.</p>
-                </div>
-              </article>
+            <p data-split-title>Foto</p>
+            <div class="offer-photos offer-small">
+              <p>Foto in arrivo</p>
+              <p>Foto in arrivo</p>
+              <p>Foto in arrivo</p>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div data-split-row="ruled">
-            <p data-split-title>Etichette, booking, promoter</p>
+      <section data-panel="autorizzazioni">
+        <h2 class="panel-title">
+          <button type="button" aria-expanded="false" aria-controls="content-autorizzazioni">
+            <span>AUTORIZZAZIONI</span>
+          </button>
+        </h2>
+        <div id="content-autorizzazioni" class="panel-content">
+          <div data-split-row="body">
             <p>
-              In una data registriamo in genere 4–5 artisti. Se sei
-              un’etichetta, un booking o un promoter e vuoi riservare un’intera
-              data per il tuo roster, possiamo venirti incontro con un
-              contributo agevolato. Scrivici: saremo felici di parlarne insieme
-              e trovare il modo giusto per collaborare.<br><br>
-              <a href="mailto:9pmsessions@gmail.com">9pmsessions@gmail.com</a>
+              Prima della sessione ti chiederemo di firmare alcune
+              autorizzazioni. Qui troverai i documenti da scaricare, firmare e
+              rimandarci.
+            </p>
+          </div>
+          <div data-split-row="ruled">
+            <p data-split-title>Documenti</p>
+            <ul class="offer-list offer-small" style="grid-column: 2;">
+              <li><span>Diritti d’immagine</span><span class="offer-muted">PDF in arrivo</span></li>
+              <li><span>Diritti sul brano</span><span class="offer-muted">PDF in arrivo</span></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section data-panel="progetti">
+        <h2 class="panel-title">
+          <button type="button" aria-expanded="false" aria-controls="content-progetti">
+            <span>SPECIALI</span>
+          </button>
+        </h2>
+        <div id="content-progetti" class="panel-content">
+          <div data-split-row="body">
+            <p>
+              In una data registriamo in genere 4–5 artisti.<br><br>
+              Per etichette, booking e promoter che vogliono riservare
+              un’intera data al proprio roster è previsto un contributo
+              agevolato. Le condizioni si definiscono caso per caso.
             </p>
           </div>
         </div>
       </section>
     </main>
 
-    <script>
-      (function () {
-        const root = document.documentElement;
-        const deck = document.querySelector(".deck");
-        const panel = document.querySelector('[data-panel="contributo"]');
-        const bar = panel.querySelector(".scroll-bar");
-        const tab = panel.querySelector(":scope > .panel-title > button");
-
-        document.querySelector("[data-home-link]").addEventListener("click", () => {
-          location.href = "../";
-        });
-
-        // Stessa calibrazione del sito: il titolo NINEPM·SESSIONS riempie la larghezza.
-        function calibrateTitleSize() {
-          const referenceTab = document.querySelector("[data-panel] > .panel-title > button");
-          const referenceTitle = referenceTab.querySelector("span");
-          const style = getComputedStyle(referenceTitle);
-          const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
-          const available = Math.max(1, referenceTab.clientWidth - padding);
-          root.style.setProperty("--label-size", "100px");
-          const measured = Math.max(1, referenceTitle.getBoundingClientRect().width - padding);
-          root.style.setProperty("--label-size", `${((available / measured) * 100).toFixed(4)}px`);
-          updateScrollBar();
-        }
-
-        // Stessa barra di scorrimento del sito.
-        function updateScrollBar() {
-          const header = tab.offsetHeight;
-          const inset = 8;
-          const track = panel.clientHeight - header - inset * 2;
-          const scrollable = panel.scrollHeight - panel.clientHeight;
-          const visible = scrollable > 2 && track > 40;
-          bar.dataset.visible = String(visible);
-          if (!visible) return;
-          const thumb = Math.max(24, track * (panel.clientHeight - header) / (panel.scrollHeight - header));
-          const offset = (track - thumb) * Math.min(1, Math.max(0, panel.scrollTop / scrollable));
-          bar.style.setProperty("--scroll-bar-top", `${header + inset}px`);
-          bar.style.setProperty("--scroll-bar-track", `${track.toFixed(1)}px`);
-          bar.style.setProperty("--scroll-bar-thumb", `${thumb.toFixed(1)}px`);
-          bar.style.setProperty("--scroll-bar-offset", `${offset.toFixed(1)}px`);
-        }
-
-        panel.addEventListener("scroll", updateScrollBar, { passive: true });
-        window.addEventListener("resize", calibrateTitleSize);
-        deck.addEventListener("transitionend", updateScrollBar);
-        if (typeof ResizeObserver === "function") new ResizeObserver(updateScrollBar).observe(panel);
-        if (document.fonts && document.fonts.ready) document.fonts.ready.then(calibrateTitleSize);
-        calibrateTitleSize();
-      })();
-    </script>
+    <script src="../script.js?v=sideb-20261115-1"></script>
     <script data-goatcounter="https://9pmsessions.goatcounter.com/count"
             async src="https://gc.zgo.at/count.js"></script>
   </body>

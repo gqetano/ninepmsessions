@@ -87,13 +87,15 @@ sul bordo destro (linea sottile + cursore nero), creata da script.js
 (updateScrollEnd) e disegnata in styles.css (.scroll-bar). Il cursore tocca il
 fondo quando il testo della sezione è finito. Non compare se il testo non scorre.
 
-## Pagina riservata "Contributo"
-contributo-4tlwp7/index.html: pagina con i pacchetti e il contributo, da inviare
-agli artisti selezionati. Non è collegata da nessuna parte del sito e ha il meta
-robots noindex; si raggiunge solo con il link diretto. Non è protetta da password:
-chi ha il link (o guarda il repository, che è pubblico) può aprirla.
-Usa styles.css del sito; stili e script propri sono dentro la pagina stessa.
-Per cambiare il link basta rinominare la cartella.
+## Side B (pagina riservata)
+contributo-4tlwp7/index.html: mini-sito per gli artisti selezionati, con lo stesso
+meccanismo del sito (usa ../styles.css e ../script.js) ma sezioni e colori propri:
+NINEPM·SESSIONS, Contributo, Spazio, Autorizzazioni, Speciali.
+Righe della griglia, colori e regole "peek" delle sue sezioni sono nello <style> della pagina.
+Non è collegato da nessuna parte del sito e ha il meta robots noindex; si raggiunge
+solo con il link diretto. Non è protetto da password: chi ha il link (o guarda il
+repository, che è pubblico) può aprirlo. Per cambiare il link basta rinominare la cartella.
+Da completare: foto dello spazio, PDF delle autorizzazioni, nomi definitivi degli studi.
 
 ## Titoli delle sezioni
 Ogni titolo è un heading vero con dentro il bottone che apre la sezione:
