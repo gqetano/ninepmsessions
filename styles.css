@@ -280,6 +280,11 @@ button {
   background: var(--panel-color);
   text-align: left;
   cursor: pointer;
+  /* Il titolo si clicca ma non si seleziona: niente evidenziazione al doppio clic o al tocco. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .deck > section > button:focus-visible {
