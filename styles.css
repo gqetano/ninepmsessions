@@ -172,19 +172,19 @@ button {
   --submissions-row: 1fr;
 }
 
-.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="home"]):has([data-panel="home"]:not([data-peek-dismissed]) > button:focus-visible) {
+.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="home"]):has([data-panel="home"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
   --home-row: calc(var(--peek-row) + var(--home-banner-height, 0px));
 }
 
-.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="quartetto"]):has([data-panel="quartetto"]:not([data-peek-dismissed]) > button:focus-visible) {
+.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="quartetto"]):has([data-panel="quartetto"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
   --quartetto-row: calc(var(--peek-row) + var(--quartetto-banner-height, 0px));
 }
 
-.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="format"]):has([data-panel="format"]:not([data-peek-dismissed]) > button:focus-visible) {
+.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="format"]):has([data-panel="format"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
   --format-row: calc(var(--peek-row) + var(--format-banner-height, 0px));
 }
 
-.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="submissions"]):has([data-panel="submissions"]:not([data-peek-dismissed]) > button:focus-visible) {
+.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="submissions"]):has([data-panel="submissions"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
   --submissions-row: calc(var(--peek-row) + var(--submissions-banner-height, 0px));
 }
 
@@ -197,7 +197,7 @@ button {
 }
 .deck[data-submission-nudge="true"] #content-submissions { visibility: hidden; }
 
-.deck[data-logo-game="active"] > section > button {
+.deck[data-logo-game="active"] > section > .panel-title > button {
   pointer-events: none;
 }
 
@@ -210,7 +210,7 @@ button {
   background: var(--panel-color);
 }
 
-.deck > section:has(> button[aria-expanded="true"]) {
+.deck > section:has(> .panel-title > button[aria-expanded="true"]) {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: none;
@@ -227,7 +227,7 @@ button {
   opacity: 0;
 }
 
-.deck > section:has(> button[aria-expanded="true"]) > .scroll-bar[data-visible="true"] {
+.deck > section:has(> .panel-title > button[aria-expanded="true"]) > .scroll-bar[data-visible="true"] {
   opacity: 1;
 }
 
@@ -267,10 +267,19 @@ button {
   --panel-color: var(--submissions);
 }
 
-.deck > section > button {
+/* Il titolo è un vero heading (h1 per NINEPM·SESSIONS, h2 per le sezioni);
+   il bottone al suo interno apre e chiude la sezione. */
+.deck > section > .panel-title {
   position: sticky;
   top: var(--panel-banner-height, 0px);
   z-index: 2;
+  display: block;
+  margin: 0;
+  font: inherit;
+}
+
+.deck > section > .panel-title > button {
+  position: relative;
   display: block;
   width: 100%;
   margin: 0;
@@ -287,12 +296,12 @@ button {
   touch-action: manipulation;
 }
 
-.deck > section > button:focus-visible {
+.deck > section > .panel-title > button:focus-visible {
   outline: 0.18rem solid var(--black);
   outline-offset: -0.28rem;
 }
 
-.deck > section > button[aria-expanded="true"]::after {
+.deck > section > .panel-title > button[aria-expanded="true"]::after {
   content: "";
   position: absolute;
   right: 0;
@@ -308,7 +317,7 @@ button {
   );
 }
 
-.deck > section > button > span {
+.deck > section > .panel-title > button > span {
   display: inline-block;
   max-width: none;
   overflow: visible;
@@ -344,7 +353,8 @@ button {
   pointer-events: none;
 }
 
-.deck > section > button[aria-expanded="true"] + .panel-content {
+/* "~" e non "+": tra titolo e contenuto c'è la barra di scorrimento. */
+.deck > section > .panel-title:has(> button[aria-expanded="true"]) ~ .panel-content {
   pointer-events: auto;
 }
 
@@ -713,7 +723,7 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
   flex-direction: column;
   color: var(--black);
 }
-.deck > [data-panel="colophon"] > button { flex: 0 0 auto; }
+.deck > [data-panel="colophon"] > .panel-title { flex: 0 0 auto; }
 #content-colophon {
   flex: 0 0 auto;
   margin-top: auto;
@@ -721,7 +731,7 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
   padding-bottom: 0.75rem;
 }
 .deck[data-active="colophon"] { --colophon-row: 1fr; }
-.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="colophon"]):has([data-panel="colophon"]:not([data-peek-dismissed]) > button:focus-visible) {
+.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="colophon"]):has([data-panel="colophon"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
   --colophon-row: calc(var(--peek-row) + var(--colophon-banner-height, 0px));
 }
 

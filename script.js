@@ -462,8 +462,8 @@
   }
 
   function calibrateTitleSize() {
-    const referenceTitle = document.querySelector("[data-panel] > button > span");
-    const referenceTab = document.querySelector("[data-panel] > button");
+    const referenceTitle = document.querySelector("[data-panel] > .panel-title > button > span");
+    const referenceTab = document.querySelector("[data-panel] > .panel-title > button");
     const titleStyle = getComputedStyle(referenceTitle);
     const horizontalPadding =
       parseFloat(titleStyle.paddingLeft) + parseFloat(titleStyle.paddingRight);
@@ -524,20 +524,20 @@
   // proporzionale al testo visibile e tocca il fondo quando il testo è finito.
   const scrollBars = new Map();
   panels.forEach((panel) => {
-    const tab = panel.querySelector(":scope > button");
+    const tab = panel.querySelector(":scope > .panel-title > button");
     if (panel.dataset.panel === "colophon" || !tab) return;
     const bar = document.createElement("div");
     bar.className = "scroll-bar";
     bar.setAttribute("aria-hidden", "true");
     bar.append(document.createElement("span"));
-    tab.after(bar);
+    tab.parentElement.after(bar);
     scrollBars.set(panel, bar);
   });
 
   function updateScrollEnd(panel) {
     const bar = scrollBars.get(panel);
     if (!bar) return;
-    const tab = panel.querySelector(":scope > button");
+    const tab = panel.querySelector(":scope > .panel-title > button");
     const banner = panel.querySelector(":scope > [data-marquee-text]");
     const header = tab.offsetHeight + (banner ? banner.offsetHeight : 0);
     const inset = 8;

@@ -10,12 +10,12 @@
     <link rel="icon" type="image/x-icon" href="../assets/favicon.ico?v=3" sizes="16x16 32x32 48x48 64x64">
     <link rel="icon" type="image/png" href="../assets/favicon.png?v=3" sizes="512x512">
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=3" sizes="any">
-    <link rel="stylesheet" href="../styles.css?v=titles-20261115-1">
+    <link rel="stylesheet" href="../styles.css?v=headings-20261115-1">
     <style>
       /* Solo due fasce: il titolo del sito (chiuso) e la sezione Contributo (aperta). */
       .offer-deck { grid-template-rows: var(--home-row) 1fr; }
       [data-panel="contributo"] { --panel-color: #6ea8ff; }
-      .offer-deck [data-panel="contributo"] > button { cursor: default; }
+      .offer-deck [data-panel="contributo"] > .panel-title > button { cursor: default; }
 
       .offer-small { font-size: var(--form-font-size); line-height: 1.2; }
       .offer-packages {
@@ -59,15 +59,19 @@
   <body>
     <main class="deck offer-deck" data-active="contributo" aria-label="Contributo e pacchetti">
       <section data-panel="home">
-        <button type="button" aria-expanded="false" data-home-link aria-label="Vai al sito 9PM Sessions">
-          <span>NINEPM·SESSIONS</span>
-        </button>
+        <h1 class="panel-title">
+          <button type="button" aria-expanded="false" data-home-link aria-label="Vai al sito 9PM Sessions">
+            <span>NINEPM·SESSIONS</span>
+          </button>
+        </h1>
       </section>
 
       <section data-panel="contributo">
-        <button type="button" aria-expanded="true" aria-controls="content-contributo">
-          <span>CONTRIBUTO</span>
-        </button>
+        <h2 class="panel-title">
+          <button type="button" aria-expanded="true" aria-controls="content-contributo">
+            <span>CONTRIBUTO</span>
+          </button>
+        </h2>
         <div class="scroll-bar" aria-hidden="true"><span></span></div>
         <div id="content-contributo" class="panel-content">
           <div data-split-row="body">
@@ -134,7 +138,7 @@
         const deck = document.querySelector(".deck");
         const panel = document.querySelector('[data-panel="contributo"]');
         const bar = panel.querySelector(".scroll-bar");
-        const tab = panel.querySelector(":scope > button");
+        const tab = panel.querySelector(":scope > .panel-title > button");
 
         document.querySelector("[data-home-link]").addEventListener("click", () => {
           location.href = "../";
@@ -142,7 +146,7 @@
 
         // Stessa calibrazione del sito: il titolo NINEPM·SESSIONS riempie la larghezza.
         function calibrateTitleSize() {
-          const referenceTab = document.querySelector("[data-panel] > button");
+          const referenceTab = document.querySelector("[data-panel] > .panel-title > button");
           const referenceTitle = referenceTab.querySelector("span");
           const style = getComputedStyle(referenceTitle);
           const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);

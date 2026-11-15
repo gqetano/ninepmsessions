@@ -94,3 +94,11 @@ robots noindex; si raggiunge solo con il link diretto. Non è protetta da passwo
 chi ha il link (o guarda il repository, che è pubblico) può aprirla.
 Usa styles.css del sito; stili e script propri sono dentro la pagina stessa.
 Per cambiare il link basta rinominare la cartella.
+
+## Titoli delle sezioni
+Ogni titolo è un heading vero con dentro il bottone che apre la sezione:
+<h1 class="panel-title"> per NINEPM·SESSIONS, <h2 class="panel-title"> per le altre.
+Lo stile grande è lo stesso per tutti (font: inherit sul heading, dimensione sul bottone).
+Attenzione: il contenuto della sezione aperta diventa cliccabile grazie alla regola
+".panel-title:has(> button[aria-expanded="true"]) ~ .panel-content" in styles.css.
+Se si aggiungono elementi tra titolo e contenuto, verificare che il form resti cliccabile.
