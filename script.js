@@ -604,73 +604,110 @@
     wakeScrollBar(left);
   });
 
-  // Fine del testo: spingendo oltre il bordo il contenuto cede un po' come un
-  // elastico (lasciando un vuoto) e poi torna da solo in posizione.
-  const overscroll = { panel: null, content: null, amount: 0, offset: 0, frame: 0, timer: 0 };
-  const overscrollRelease = 110;
-  const overscrollReturn = 460;
+  // Fine del testo: come il rimbalzo di iOS. Il testo arriva al bordo con la sua
+  // velocità, lo supera un po' (lasciando un vuoto) e torna subito indietro con una
+  // molla smorzata. Col dito appoggiato il testo segue il dito, con resistenza.
+  const springOmega = 8; // rigidità della molla (1/s): ~0,12 s per il picco, ~0,5 s per tornare
+  const overscroll = { panel: null, content: null, x: 0, v: 0, x0: 0, v0: 0, start: 0, frame: 0, drag: 0 };
 
-  function setOverscrollOffset(offset) {
-    overscroll.offset = offset;
+  function overscrollLimit(panel) {
+    return Math.min(150, panel.clientHeight * 0.25);
+  }
+
+  function renderOverscroll() {
     if (!overscroll.content) return;
-    overscroll.content.style.transform = Math.abs(offset) < 0.1 ? "" : `translateY(${offset.toFixed(2)}px)`;
+    const limit = overscrollLimit(overscroll.panel) * 1.15;
+    const shown = Math.max(-limit, Math.min(limit, overscroll.x));
+    overscroll.content.style.transform = Math.abs(shown) < 0.3 ? "" : `translateY(${(-shown).toFixed(2)}px)`;
   }
 
   function resetOverscroll() {
-    window.clearTimeout(overscroll.timer);
     if (overscroll.frame) cancelFrame(overscroll.frame);
     overscroll.frame = 0;
-    overscroll.amount = 0;
-    setOverscrollOffset(0);
+    overscroll.x = overscroll.v = overscroll.drag = 0;
+    renderOverscroll();
     overscroll.panel = null;
     overscroll.content = null;
   }
 
-  function springBackOverscroll() {
-    window.clearTimeout(overscroll.timer);
-    if (!overscroll.panel || overscroll.frame) return;
-    overscroll.amount = 0;
-    const from = overscroll.offset;
-    const startedAt = getTime();
-    function step(now) {
-      const progress = Math.min(1, (now - startedAt) / overscrollReturn);
-      setOverscrollOffset(from * Math.pow(1 - progress, 3));
-      if (progress < 1) {
-        overscroll.frame = requestFrame(step);
-        return;
-      }
-      overscroll.frame = 0;
-      resetOverscroll();
-    }
-    overscroll.frame = requestFrame(step);
-  }
-
-  // delta > 0: si spinge oltre la fine; delta < 0: oltre l'inizio.
-  // Restituisce true finché l'elastico è teso.
-  function pushOverscroll(panel, delta, held = false) {
-    if (!delta || reducedMotion.matches) return false;
+  function attachOverscroll(panel) {
+    if (overscroll.panel === panel) return true;
+    resetOverscroll();
     const content = panel.querySelector(":scope > .panel-content");
     if (!content) return false;
-    if (overscroll.panel !== panel) resetOverscroll();
+    overscroll.panel = panel;
+    overscroll.content = content;
+    return true;
+  }
+
+  function stepSpring(now) {
+    const t = Math.max(0, now - overscroll.start) / 1000;
+    const a = overscroll.x0;
+    const b = overscroll.v0 + springOmega * a;
+    const decay = Math.exp(-springOmega * t);
+    overscroll.x = (a + b * t) * decay;
+    overscroll.v = (b - springOmega * (a + b * t)) * decay;
+    renderOverscroll();
+    if (t > 0.1 && Math.abs(overscroll.x) < 0.3 && Math.abs(overscroll.v) < 30) {
+      overscroll.frame = 0;
+      resetOverscroll();
+      return;
+    }
+    overscroll.frame = requestFrame(stepSpring);
+  }
+
+  function startSpring(velocity = 0) {
+    if (overscroll.frame) cancelFrame(overscroll.frame);
+    overscroll.x0 = overscroll.x;
+    overscroll.v0 = velocity;
+    overscroll.drag = 0;
+    overscroll.start = getTime();
+    overscroll.frame = requestFrame(stepSpring);
+  }
+
+  // Il testo sbatte contro il bordo a una certa velocità (px/s, positiva verso la fine).
+  function kickOverscroll(panel, velocity) {
+    if (!velocity || reducedMotion.matches || !attachOverscroll(panel)) return false;
+    // Velocità massima tale che il picco non superi il limite.
+    const maxSpeed = overscrollLimit(panel) * springOmega * Math.E;
+    const speed = Math.max(-maxSpeed, Math.min(maxSpeed, overscroll.v + velocity));
+    startSpring(speed);
+    wakeScrollBar(panel);
+    return true;
+  }
+
+  function overscrollActive(panel) {
+    return overscroll.panel === panel && Math.abs(overscroll.x) >= 0.3;
+  }
+
+  // Dito appoggiato oltre il bordo: il testo lo segue con una resistenza crescente.
+  // Restituisce true finché l'elastico è teso.
+  function dragOverscroll(panel, delta) {
+    if (!delta || reducedMotion.matches || !attachOverscroll(panel)) return false;
+    const limit = overscrollLimit(panel);
     if (overscroll.frame) {
       cancelFrame(overscroll.frame);
       overscroll.frame = 0;
+      // Riprende dal punto in cui si trova la molla.
+      const ratio = Math.min(0.95, Math.abs(overscroll.x) / limit);
+      overscroll.drag = Math.sign(overscroll.x) * -limit * 2 * Math.log(1 - ratio);
     }
-    window.clearTimeout(overscroll.timer);
-    const previous = overscroll.amount;
-    const amount = previous + delta;
-    // Tornando indietro si riassorbe l'elastico, senza passare al bordo opposto.
-    if (previous && Math.sign(amount) !== Math.sign(previous)) {
+    const previous = overscroll.drag;
+    const drag = previous + delta;
+    if (previous && Math.sign(drag) !== Math.sign(previous)) {
       resetOverscroll();
       return false;
     }
-    overscroll.panel = panel;
-    overscroll.content = content;
-    overscroll.amount = amount;
-    const limit = Math.min(96, panel.clientHeight * 0.14);
-    setOverscrollOffset(-Math.sign(amount) * limit * (1 - Math.exp(-Math.abs(amount) / 240)));
-    if (!held) overscroll.timer = window.setTimeout(springBackOverscroll, overscrollRelease);
+    overscroll.drag = drag;
+    overscroll.x = Math.sign(drag) * limit * (1 - Math.exp(-Math.abs(drag) / (limit * 2)));
+    overscroll.v = 0;
+    renderOverscroll();
+    wakeScrollBar(panel);
     return true;
+  }
+
+  function releaseOverscroll() {
+    if (overscroll.panel && !overscroll.frame && overscroll.x) startSpring(0);
   }
 
   function animatePanelState(panelName, duration = panelDuration) {
@@ -777,6 +814,7 @@
   let wheelTail = false;
   let lastWheelTime = -Infinity;
   let lastWheelDelta = 0;
+  let wheelSpeed = 0;
   let lastContentScrollTime = -Infinity;
   let lastEdgePush = -Infinity;
   const edgeCooldown = 350;
@@ -924,14 +962,14 @@
         const before = panel.scrollTop;
         routePanelScroll(panel, step);
         const leftover = step - (panel.scrollTop - before);
-        if (Math.abs(leftover) > 0.5) pushOverscroll(panel, leftover, true);
+        if (Math.abs(leftover) > 0.5) dragOverscroll(panel, leftover);
       } else if (step) {
         // Lo scroll nativo è arrivato al bordo: da qui il dito tende l'elastico.
         const atEdge = step > 0
           ? panel.scrollHeight - panel.clientHeight - panel.scrollTop <= 1
           : panel.scrollTop <= 1;
-        if ((overscroll.panel === panel && overscroll.amount) || atEdge) {
-          if (pushOverscroll(panel, step, true) && event.cancelable) event.preventDefault();
+        if (overscrollActive(panel) || atEdge) {
+          if (dragOverscroll(panel, step) && event.cancelable) event.preventDefault();
         }
       }
       touchNavigation.lastY = event.touches[0].clientY;
@@ -954,11 +992,11 @@
       flick = speed >= 0.3 && getTime() - last.t < 80;
     }
     releasePanelDrag(!canScrollNavigate(event.target), flick);
-    springBackOverscroll();
+    releaseOverscroll();
   }, { passive: true, capture: true });
   deck.addEventListener("touchcancel", () => {
     touchNavigation = null;
-    springBackOverscroll();
+    releaseOverscroll();
     releasePanelDrag(true);
   }, { passive: true });
 
@@ -981,6 +1019,11 @@
     // Un nuovo swipe sul trackpad, anche sopra l'inerzia del precedente: il delta risale.
     const accelerating = gap < 160 && magnitude >= 20 && magnitude > lastWheelDelta * 2;
     lastWheelDelta = magnitude;
+    // Velocità dello scroll (px/s): serve a dare forza al rimbalzo di fine testo.
+    const instantSpeed = gap < 100 ? (delta / Math.max(8, gap)) * 1000 : delta * 10;
+    wheelSpeed = gap < 100 && Math.sign(instantSpeed) === Math.sign(wheelSpeed)
+      ? wheelSpeed * 0.4 + instantSpeed * 0.6
+      : instantSpeed;
 
     if (panelAnimationFrame || now < navigationLockedUntil) {
       wheelNavigation = null;
@@ -1019,10 +1062,15 @@
       const moved = panel.scrollTop - scrollBefore;
       if (moved) lastContentScrollTime = now;
       else if (settling && !accelerating) lastEdgePush = now;
-      // Ciò che non è più testo da scorrere tende l'elastico di fine testo.
-      if (Math.abs(delta - moved) > 0.5) {
-        pushOverscroll(panel, delta - moved);
-        wakeScrollBar(panel);
+      // Il testo è arrivato al bordo: un solo rimbalzo con la velocità che aveva.
+      // L'inerzia che continua ad arrivare non lo prolunga; un nuovo gesto sì.
+      const leftover = delta - moved;
+      const springing = overscrollActive(panel) || (overscroll.panel === panel && overscroll.frame);
+      // Un nuovo gesto rilancia il rimbalzo solo quando il testo sta già tornando.
+      const relaunch = (accelerating || wheelNotch) && Math.sign(overscroll.v) !== Math.sign(leftover);
+      if (Math.abs(leftover) > 0.5 && (!springing || relaunch)) {
+        const speed = Math.max(800, Math.min(4000, Math.abs(wheelSpeed)));
+        kickOverscroll(panel, Math.sign(leftover) * speed);
       }
       return;
     }
@@ -1111,11 +1159,34 @@
   deck.addEventListener("logo-game-change", resetSubmissionIdle);
   reducedMotion.addEventListener("change", resetSubmissionIdle);
 
+  // Scroll nativo a inerzia (dito già sollevato): se arriva al bordo con velocità, rimbalza.
+  const nativeScroll = new WeakMap();
+  function trackNativeScroll(panel) {
+    const now = getTime();
+    const previous = nativeScroll.get(panel);
+    const top = panel.scrollTop;
+    nativeScroll.set(panel, { top, time: now, speed: 0 });
+    if (!previous || panel.dataset.panel !== deck.dataset.active || panelDrag || panelAnimationFrame ||
+        now < navigationLockedUntil || now - lastWheelTime < 200 || touchNavigation) return;
+    const gap = now - previous.time;
+    const step = top - previous.top;
+    if (gap > 120 || Math.abs(step) > 600) return;
+    const speed = gap ? (step / gap) * 1000 * 0.6 + previous.speed * 0.4 : previous.speed;
+    nativeScroll.get(panel).speed = speed;
+    const atBottom = panel.scrollHeight - panel.clientHeight - top <= 1;
+    const atTop = top <= 1;
+    if ((atBottom && speed > 150) || (atTop && speed < -150)) {
+      kickOverscroll(panel, speed);
+      nativeScroll.delete(panel);
+    }
+  }
+
   // La barra di scorrimento segue scroll, apertura delle sezioni, resize e campi che crescono.
   document.addEventListener("scroll", (event) => {
     if (panels.includes(event.target)) {
       updateScrollEnd(event.target);
       wakeScrollBar(event.target);
+      trackNativeScroll(event.target);
     }
   }, { passive: true, capture: true });
   if (typeof ResizeObserver === "function") {
