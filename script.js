@@ -517,7 +517,13 @@
         panel.scrollTop = 0;
       }
     });
+    resetOverscroll();
     updateScrollEnds();
+    // All'apertura la barra si mostra un attimo: dice subito se c'è altro testo.
+    if (previousPanel !== panelName) {
+      const opened = panels.find((panel) => panel.dataset.panel === panelName);
+      if (opened) wakeScrollBar(opened, scrollBarOpenDelay);
+    }
   }
 
   // Barra di scorrimento: una per sezione, fissa sotto il titolo. Il cursore è
@@ -556,6 +562,115 @@
 
   function updateScrollEnds() {
     panels.forEach(updateScrollEnd);
+  }
+
+  // La barra resta nascosta finché non serve: compare quando si scorre e
+  // sparisce dopo una breve pausa; col mouse vicino al bordo destro resta visibile.
+  const scrollBarHideDelay = 900;
+  const scrollBarOpenDelay = 1400;
+  const scrollBarHoverZone = 56;
+  let scrollBarHover = null;
+
+  function wakeScrollBar(panel, delay = scrollBarHideDelay) {
+    const bar = scrollBars.get(panel);
+    if (!bar) return;
+    bar.dataset.awake = "true";
+    window.clearTimeout(bar.hideTimer);
+    if (scrollBarHover === panel) return;
+    bar.hideTimer = window.setTimeout(() => {
+      if (scrollBarHover !== panel) delete bar.dataset.awake;
+    }, delay);
+  }
+
+  deck.addEventListener("pointermove", (event) => {
+    if (event.pointerType !== "mouse") return;
+    const panel = panels.find((item) => item.dataset.panel === deck.dataset.active);
+    const rect = panel ? panel.getBoundingClientRect() : null;
+    const near = rect && event.clientX >= rect.right - scrollBarHoverZone &&
+      event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+    if (near && scrollBarHover !== panel) {
+      scrollBarHover = panel;
+      wakeScrollBar(panel);
+    } else if (!near && scrollBarHover) {
+      const left = scrollBarHover;
+      scrollBarHover = null;
+      wakeScrollBar(left);
+    }
+  }, { passive: true });
+  deck.addEventListener("pointerleave", () => {
+    if (!scrollBarHover) return;
+    const left = scrollBarHover;
+    scrollBarHover = null;
+    wakeScrollBar(left);
+  });
+
+  // Fine del testo: spingendo oltre il bordo il contenuto cede un po' come un
+  // elastico (lasciando un vuoto) e poi torna da solo in posizione.
+  const overscroll = { panel: null, content: null, amount: 0, offset: 0, frame: 0, timer: 0 };
+  const overscrollRelease = 110;
+  const overscrollReturn = 460;
+
+  function setOverscrollOffset(offset) {
+    overscroll.offset = offset;
+    if (!overscroll.content) return;
+    overscroll.content.style.transform = Math.abs(offset) < 0.1 ? "" : `translateY(${offset.toFixed(2)}px)`;
+  }
+
+  function resetOverscroll() {
+    window.clearTimeout(overscroll.timer);
+    if (overscroll.frame) cancelFrame(overscroll.frame);
+    overscroll.frame = 0;
+    overscroll.amount = 0;
+    setOverscrollOffset(0);
+    overscroll.panel = null;
+    overscroll.content = null;
+  }
+
+  function springBackOverscroll() {
+    window.clearTimeout(overscroll.timer);
+    if (!overscroll.panel || overscroll.frame) return;
+    overscroll.amount = 0;
+    const from = overscroll.offset;
+    const startedAt = getTime();
+    function step(now) {
+      const progress = Math.min(1, (now - startedAt) / overscrollReturn);
+      setOverscrollOffset(from * Math.pow(1 - progress, 3));
+      if (progress < 1) {
+        overscroll.frame = requestFrame(step);
+        return;
+      }
+      overscroll.frame = 0;
+      resetOverscroll();
+    }
+    overscroll.frame = requestFrame(step);
+  }
+
+  // delta > 0: si spinge oltre la fine; delta < 0: oltre l'inizio.
+  // Restituisce true finché l'elastico è teso.
+  function pushOverscroll(panel, delta, held = false) {
+    if (!delta || reducedMotion.matches) return false;
+    const content = panel.querySelector(":scope > .panel-content");
+    if (!content) return false;
+    if (overscroll.panel !== panel) resetOverscroll();
+    if (overscroll.frame) {
+      cancelFrame(overscroll.frame);
+      overscroll.frame = 0;
+    }
+    window.clearTimeout(overscroll.timer);
+    const previous = overscroll.amount;
+    const amount = previous + delta;
+    // Tornando indietro si riassorbe l'elastico, senza passare al bordo opposto.
+    if (previous && Math.sign(amount) !== Math.sign(previous)) {
+      resetOverscroll();
+      return false;
+    }
+    overscroll.panel = panel;
+    overscroll.content = content;
+    overscroll.amount = amount;
+    const limit = Math.min(96, panel.clientHeight * 0.14);
+    setOverscrollOffset(-Math.sign(amount) * limit * (1 - Math.exp(-Math.abs(amount) / 240)));
+    if (!held) overscroll.timer = window.setTimeout(springBackOverscroll, overscrollRelease);
+    return true;
   }
 
   function animatePanelState(panelName, duration = panelDuration) {
@@ -707,6 +822,7 @@
   function dragPanel(gesture, next, distance) {
     if (!panelDrag) {
       resetSubmissionIdle();
+      resetOverscroll();
       deck.dataset.panelDrag = "true";
       deck.style.transition = "none";
       const startRows = parseRows(getComputedStyle(deck).gridTemplateRows);
@@ -801,9 +917,22 @@
     const direction = dy < 0 ? 1 : -1;
     const next = adjacentPanel(touchNavigation, direction);
     if (!next) {
+      const step = touchNavigation.lastY - event.touches[0].clientY;
+      const panel = touchNavigation.panel;
       if (touchNavigation.routed) {
         if (event.cancelable) event.preventDefault();
-        routePanelScroll(touchNavigation.panel, touchNavigation.lastY - event.touches[0].clientY);
+        const before = panel.scrollTop;
+        routePanelScroll(panel, step);
+        const leftover = step - (panel.scrollTop - before);
+        if (Math.abs(leftover) > 0.5) pushOverscroll(panel, leftover, true);
+      } else if (step) {
+        // Lo scroll nativo è arrivato al bordo: da qui il dito tende l'elastico.
+        const atEdge = step > 0
+          ? panel.scrollHeight - panel.clientHeight - panel.scrollTop <= 1
+          : panel.scrollTop <= 1;
+        if ((overscroll.panel === panel && overscroll.amount) || atEdge) {
+          if (pushOverscroll(panel, step, true) && event.cancelable) event.preventDefault();
+        }
       }
       touchNavigation.lastY = event.touches[0].clientY;
       return;
@@ -825,9 +954,11 @@
       flick = speed >= 0.3 && getTime() - last.t < 80;
     }
     releasePanelDrag(!canScrollNavigate(event.target), flick);
+    springBackOverscroll();
   }, { passive: true, capture: true });
   deck.addEventListener("touchcancel", () => {
     touchNavigation = null;
+    springBackOverscroll();
     releasePanelDrag(true);
   }, { passive: true });
 
@@ -885,8 +1016,14 @@
     if (!next) {
       const scrollBefore = panel.scrollTop;
       routePanelScroll(panel, delta);
-      if (panel.scrollTop !== scrollBefore) lastContentScrollTime = now;
+      const moved = panel.scrollTop - scrollBefore;
+      if (moved) lastContentScrollTime = now;
       else if (settling && !accelerating) lastEdgePush = now;
+      // Ciò che non è più testo da scorrere tende l'elastico di fine testo.
+      if (Math.abs(delta - moved) > 0.5) {
+        pushOverscroll(panel, delta - moved);
+        wakeScrollBar(panel);
+      }
       return;
     }
     if (!gesture.next) gesture.direction = Math.sign(delta);
@@ -976,7 +1113,10 @@
 
   // La barra di scorrimento segue scroll, apertura delle sezioni, resize e campi che crescono.
   document.addEventListener("scroll", (event) => {
-    if (panels.includes(event.target)) updateScrollEnd(event.target);
+    if (panels.includes(event.target)) {
+      updateScrollEnd(event.target);
+      wakeScrollBar(event.target);
+    }
   }, { passive: true, capture: true });
   if (typeof ResizeObserver === "function") {
     const scrollEndObserver = new ResizeObserver(updateScrollEnds);

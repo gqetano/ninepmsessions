@@ -225,10 +225,14 @@ button {
   height: 0;
   pointer-events: none;
   opacity: 0;
+  transition: opacity 420ms var(--ease);
 }
 
-.deck > section:has(> .panel-title > button[aria-expanded="true"]) > .scroll-bar[data-visible="true"] {
+/* Compare solo mentre si scorre, quando si apre la sezione o col mouse
+   vicino al bordo destro; poi sparisce da sola (data-awake, da script.js). */
+.deck > section:has(> .panel-title > button[aria-expanded="true"]) > .scroll-bar[data-visible="true"][data-awake="true"] {
   opacity: 1;
+  transition-duration: 120ms;
 }
 
 .scroll-bar > span {
