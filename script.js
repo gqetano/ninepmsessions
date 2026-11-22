@@ -497,11 +497,11 @@
     });
   }
 
-  function applyPanelState(panelName) {
-    const previousPanel = deck.dataset.active;
-    deck.dataset.active = panelName;
-    // PROTOTIPO menu: le schede sopra quella aperta spariscono (altezza zero) e lei
-    // prende tutto lo spazio; quelle sotto restano come linguette.
+  // PROTOTIPO menu: le schede sopra quella aperta spariscono (altezza zero) e lei
+  // prende tutto lo spazio; quelle sotto restano come linguette. Va applicato anche
+  // quando si misura lo stato d'arrivo di un trascinamento, altrimenti le righe
+  // d'arrivo non sommano l'altezza dello schermo e si vede il fondo arancione.
+  function setCollapsedAbove(panelName) {
     const activeIndex = panels.findIndex((panel) => panel.dataset.panel === panelName);
     panels.forEach((panel, index) => {
       const variable = `--${panel.dataset.panel}-row`;
@@ -513,6 +513,12 @@
         delete panel.dataset.above;
       }
     });
+  }
+
+  function applyPanelState(panelName) {
+    const previousPanel = deck.dataset.active;
+    deck.dataset.active = panelName;
+    setCollapsedAbove(panelName);
     syncSiteMenu(panelName);
     panels.forEach((panel) => {
       const isActive = panel.dataset.panel === panelName;
@@ -958,8 +964,10 @@
       const from = deck.dataset.active;
       const scrollTop = gesture.panel.scrollTop;
       deck.dataset.active = next.dataset.panel;
+      setCollapsedAbove(next.dataset.panel);
       const targetRows = parseRows(getComputedStyle(deck).gridTemplateRows);
       deck.dataset.active = from;
+      setCollapsedAbove(from);
       const fullTravel = Math.max(120, Math.abs(targetRows[panels.indexOf(next)] - startRows[panels.indexOf(next)]));
       const travel = fullTravel;
       panelDrag = { panel: gesture.panel, from, to: next.dataset.panel,
