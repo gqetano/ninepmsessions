@@ -174,10 +174,9 @@
     if (!opening) return;
     const expand = list.querySelector(".agenda-expand");
     if (!expand) return;
+    // La sezione resta ferma: la fascia si apre sotto la riga e chi vuole scorre.
     requestAnimationFrame(() => {
       expand.dataset.open = "";
-      const cell = list.querySelector(`[data-day="${key}"]`);
-      window.setTimeout(() => cell && cell.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
     });
   }
 
