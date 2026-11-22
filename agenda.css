@@ -94,8 +94,10 @@
 }
 
 /* Griglia: filetti sottili come nel resto del sito. */
-.agenda-grid {
-  border-top: 1px solid currentColor;
+/* Il primo filetto parte dal bordo sinistro, come nelle altre sezioni;
+   quelli tra una data e l'altra partono dalla colonna del testo. */
+.agenda {
+  border-top: 1px solid var(--black);
 }
 
 .agenda-cell {
