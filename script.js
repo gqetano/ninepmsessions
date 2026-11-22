@@ -839,6 +839,7 @@
   let lastWheelDelta = 0;
   let wheelSpeed = 0;
   let bounceSpent = false;
+  let lastKickAt = -Infinity;
   let lastContentScrollTime = -Infinity;
   let lastEdgePush = -Infinity;
   const edgeCooldown = 350;
@@ -1076,7 +1077,10 @@
     // Un nuovo swipe netto (delta che risale con decisione) è ammesso dopo 250ms dall'ultimo
     // movimento del testo, anche sopra l'inerzia del precedente.
     const movedAgo = now - lastContentScrollTime;
-    const bouncing = !gesture.next && bounceLocked(panel, now);
+    // Durante e subito dopo il rimbalzo l'inerzia non cambia sezione; un nuovo swipe
+    // deciso sì, appena il rimbalzo ha raggiunto il punto più lontano.
+    const freshSwipe = (accelerating || wheelNotch) && now - lastKickAt > 180;
+    const bouncing = !gesture.next && !freshSwipe && bounceLocked(panel, now);
     const settling = bouncing || (!gesture.next && (accelerating
       ? movedAgo < 250
       : Math.min(movedAgo, now - lastEdgePush) < edgeCooldown));
@@ -1094,10 +1098,14 @@
       // un secondo) non deve farne partire un secondo dopo il primo. Si riarma solo
       // dopo una pausa vera o con un gesto nuovo (swipe deciso o scatto di rotella).
       if (gap > 160 || accelerating || wheelNotch) bounceSpent = false;
-      if (Math.abs(leftover) > 0.5 && !bounceSpent) {
+      // Il rimbalzo parte solo se il testo stava scorrendo e arriva al bordo adesso.
+      // Se il testo era già fermo in fondo, lo scroll passa alla sezione successiva.
+      const arriving = moved !== 0 || now - lastContentScrollTime < 120;
+      if (Math.abs(leftover) > 0.5 && !bounceSpent && arriving) {
         const speed = Math.max(900, Math.min(4000, Math.abs(wheelSpeed)));
         kickOverscroll(panel, Math.sign(leftover) * speed);
         bounceSpent = true;
+        lastKickAt = now;
       }
       return;
     }
