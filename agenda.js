@@ -57,21 +57,11 @@
       list.append(note);
       return;
     }
-    const months = {};
-    keys.forEach((key) => { (months[key.slice(0, 7)] = months[key.slice(0, 7)] || []).push(key); });
-    Object.entries(months).forEach(([month, monthKeys]) => {
-      const block = document.createElement("section");
-      block.className = "agenda-month-block";
-      const [y, m] = month.split("-").map(Number);
-      const title = document.createElement("h3");
-      title.className = "agenda-month";
-      title.textContent = `${monthNames[m - 1]} ${y}`;
-      const grid = document.createElement("div");
-      grid.className = "agenda-grid";
-      monthKeys.forEach((key) => grid.append(buildCell(key)));
-      block.append(title, grid);
-      list.append(block);
-    });
+    // Tutte le date in fila, una casella ciascuna: giorno e mese stanno nella casella.
+    const grid = document.createElement("div");
+    grid.className = "agenda-grid";
+    keys.forEach((key) => grid.append(buildCell(key)));
+    list.append(grid);
     markLastColumn();
     if (selectedDay) placeExpand();
   }
@@ -85,7 +75,9 @@
     cell.dataset.day = key;
     const weekday = document.createElement("span");
     weekday.className = "agenda-weekday";
-    weekday.textContent = dayNames[new Date(y, m - 1, d).getDay()];
+    // "sabato, dicembre"; l'anno solo se non è quello in corso.
+    const year = y === today.getFullYear() ? "" : ` ${y}`;
+    weekday.textContent = `${dayNames[new Date(y, m - 1, d).getDay()]}, ${monthNames[m - 1]}${year}`;
     const number = document.createElement("span");
     number.className = "agenda-number";
     number.textContent = pad(d);
@@ -95,7 +87,7 @@
     if (state === "open") {
       cell.type = "button";
       cell.setAttribute("aria-pressed", String(selectedDay === key));
-      cell.setAttribute("aria-label", `${weekday.textContent} ${d} ${monthNames[m - 1]}, ${note.textContent}`);
+      cell.setAttribute("aria-label", `${dayNames[new Date(y, m - 1, d).getDay()]} ${d} ${monthNames[m - 1]}${year}, ${note.textContent}`);
       cell.addEventListener("click", () => openDay(key));
     }
     cell.append(weekday, number, note);
@@ -196,7 +188,6 @@
 
   function fillExpand(body) {
     body.innerHTML = `
-      <h4 class="agenda-day-title">${dayTitle(selectedDay)}</h4>
       <div class="agenda-day-body">
         <div class="agenda-slots" role="group" aria-label="Orari"></div>
         <form class="agenda-form" novalidate></form>

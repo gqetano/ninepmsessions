@@ -205,7 +205,10 @@ button.agenda-cell[aria-pressed="true"] {
   text-transform: uppercase;
 }
 
+/* Giorno e mese sono già nella casella: nella fascia solo orari e prenotazione,
+   nella colonna di destra come il resto del testo. */
 .agenda-day-body {
+  grid-column: 2;
   min-width: 0;
 }
 
@@ -330,7 +333,7 @@ button.agenda-slot[aria-pressed="true"] {
   }
 
   .agenda-day-body {
-    padding-right: 0;
+    grid-column: auto;
   }
 
 }
