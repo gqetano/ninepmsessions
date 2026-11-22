@@ -1,7 +1,6 @@
 (function () {
   const deck = document.querySelector(".deck");
   const panels = Array.from(document.querySelectorAll("[data-panel]"));
-  const bouncingLogo = document.querySelector("[data-bouncer-logo]");
   const knownPanels = new Set(panels.map((panel) => panel.dataset.panel));
   const root = document.documentElement;
   // La fascia appartiene alla sezione che la contiene, anche se viene spostata.
@@ -13,22 +12,11 @@
   });
   const panelDuration = 700;
   const panelEase = cubicBezier(0.16, 1, 0.3, 1);
-  const maxBouncingLogos = 80;
   let panelAnimationFrame;
   let panelDrag;
   let wheelReleaseTimer;
   let resizeFrame;
-  let logoAnimationFrame;
-  let logoResizeFrame;
-  let logoLastTime = 0;
-  const bouncingLogoStates = [];
-  const bouncingLogoListeners = new WeakSet();
-  let isLogoDocked = false;
-  // Il logo a riposo è agganciato al bordo superiore della sezione colophon.
   const colophonPanel = panels.find((panel) => panel.dataset.panel === "colophon");
-  let dockTrackFrame = 0;
-  let dockStableFrames = 0;
-  let dockLastTop = 0;
 
   function getTime() {
     return typeof performance !== "undefined" && performance.now
@@ -135,332 +123,6 @@
     track.style.animation = "";
   }
 
-  function getLogoBounds(logo) {
-    const rect = logo.getBoundingClientRect();
-    const width = logo.offsetWidth || rect.width || 80;
-    const height = logo.offsetHeight || rect.height || width;
-
-    return {
-      height,
-      maxX: Math.max(0, window.innerWidth - width),
-      maxY: Math.max(0, window.innerHeight - height),
-      width,
-    };
-  }
-
-  function getLogoDockGap() {
-    return Math.max(10, Math.min(window.innerWidth, window.innerHeight) * 0.018);
-  }
-
-  function getDockedLogoPosition(logo) {
-    const bounds = getLogoBounds(logo);
-    const gap = getLogoDockGap();
-    const anchorTop = colophonPanel
-      ? colophonPanel.getBoundingClientRect().top
-      : window.innerHeight;
-
-    return {
-      x: Math.max(0, bounds.maxX - gap),
-      // Appoggiato sopra il colophon: sale e scende insieme alla sezione.
-      y: Math.max(0, Math.min(bounds.maxY - gap, anchorTop - bounds.height - gap)),
-    };
-  }
-
-  // Condivisa con flipper.js, che usa lo stesso ancoraggio.
-  window.ninepmDockPosition = getDockedLogoPosition;
-
-  // Finché il colophon si muove (animazione, trascinamento, hover, resize)
-  // segue il suo bordo frame per frame; si ferma dopo ~400ms di quiete.
-  function trackDockAnchor() {
-    dockStableFrames = 0;
-    if (dockTrackFrame || !colophonPanel) {
-      return;
-    }
-
-    dockLastTop = colophonPanel.getBoundingClientRect().top;
-
-    function tick() {
-      syncDockAnchor();
-
-      if (dockStableFrames >= 24) {
-        dockTrackFrame = 0;
-        document.querySelectorAll("[data-bouncer-logo]").forEach((logo) => {
-          logo.removeAttribute("data-dock-follow");
-        });
-        return;
-      }
-
-      dockTrackFrame = requestFrame(tick);
-    }
-
-    dockTrackFrame = requestFrame(tick);
-  }
-
-  // Riallinea subito i loghi a riposo; chiamata anche nello stesso frame in
-  // cui le righe della griglia vengono scritte, così il logo non resta indietro.
-  function syncDockAnchor() {
-    if (!colophonPanel) {
-      return;
-    }
-
-    const top = colophonPanel.getBoundingClientRect().top;
-    const moved = Math.abs(top - dockLastTop) >= 0.05;
-
-    dockLastTop = top;
-    dockStableFrames = moved ? 0 : dockStableFrames + 1;
-
-    if (moved) {
-      document.querySelectorAll("[data-bouncer-logo]").forEach((logo) => {
-        logo.setAttribute("data-dock-follow", "true");
-      });
-      deck.dispatchEvent(new Event("dock-anchor-change"));
-    }
-  }
-
-  function setLogoPosition(logoState, x, y) {
-    logoState.x = x;
-    logoState.y = y;
-    logoState.element.style.setProperty("--logo-x", `${x.toFixed(2)}px`);
-    logoState.element.style.setProperty("--logo-y", `${y.toFixed(2)}px`);
-  }
-
-  function handleBouncingLogoPointer(event) {
-    event.preventDefault();
-
-    if (isLogoDocked) {
-      restartBouncingLogos();
-      return;
-    }
-
-    dockBouncingLogos();
-  }
-
-  function createBouncingLogoState(element) {
-    const state = {
-      element,
-      rotation: 0,
-      rotationVelocity: 0,
-      velocityX: 0,
-      velocityY: 0,
-      x: 0,
-      y: 0,
-    };
-
-    if (!bouncingLogoListeners.has(element)) {
-      element.addEventListener("pointerdown", handleBouncingLogoPointer);
-      bouncingLogoListeners.add(element);
-    }
-
-    return state;
-  }
-
-  function setLogoRotation(logoState, rotation) {
-    logoState.rotation = rotation;
-    logoState.element.style.setProperty("--logo-rotation", `${rotation.toFixed(2)}deg`);
-  }
-
-  function randomizeLogoRotation(logoState) {
-    const speed = 4 + Math.random() * 6;
-    const direction = Math.random() < 0.5 ? -1 : 1;
-
-    logoState.rotationVelocity = speed * direction;
-  }
-
-  function randomizeLogoVelocity(logoState) {
-    const viewportMin = Math.min(window.innerWidth, window.innerHeight);
-    const speed = Math.max(130, Math.min(260, viewportMin * 0.33));
-    const angle = ((20 + Math.random() * 50) * Math.PI) / 180;
-    const directionX = Math.random() < 0.5 ? -1 : 1;
-    const directionY = Math.random() < 0.5 ? -1 : 1;
-
-    logoState.velocityX = Math.cos(angle) * speed * directionX;
-    logoState.velocityY = Math.sin(angle) * speed * directionY;
-  }
-
-  function duplicateBouncingLogo(sourceState) {
-    if (!bouncingLogo || isLogoDocked || bouncingLogoStates.length >= maxBouncingLogos) {
-      return;
-    }
-
-    const clone = bouncingLogo.cloneNode(true);
-    const state = createBouncingLogoState(clone);
-    const sourceBounds = getLogoBounds(sourceState.element);
-
-    clone.removeAttribute("data-docked");
-    clone.removeAttribute("data-restartable");
-    document.body.append(clone);
-    bouncingLogoStates.push(state);
-    setLogoRotation(state, sourceState.rotation);
-    setLogoPosition(
-      state,
-      Math.min(sourceBounds.maxX, Math.max(0, sourceState.x)),
-      Math.min(sourceBounds.maxY, Math.max(0, sourceState.y)),
-    );
-    randomizeLogoRotation(state);
-    randomizeLogoVelocity(state);
-
-    if (state.x <= 0) {
-      state.velocityX = Math.abs(state.velocityX);
-    } else if (state.x >= sourceBounds.maxX) {
-      state.velocityX = -Math.abs(state.velocityX);
-    }
-
-    if (state.y <= 0) {
-      state.velocityY = Math.abs(state.velocityY);
-    } else if (state.y >= sourceBounds.maxY) {
-      state.velocityY = -Math.abs(state.velocityY);
-    }
-  }
-
-  function stepBouncingLogo(now) {
-    if (!bouncingLogoStates.length) {
-      return;
-    }
-
-    if (isLogoDocked) {
-      return;
-    }
-
-    const delta = Math.min(0.05, Math.max(0, (now - logoLastTime) / 1000));
-    const bouncedLogos = [];
-
-    bouncingLogoStates.forEach((logoState) => {
-      const bounds = getLogoBounds(logoState.element);
-      let nextX = logoState.x + logoState.velocityX * delta;
-      let nextY = logoState.y + logoState.velocityY * delta;
-      const nextRotation = (logoState.rotation + logoState.rotationVelocity * delta) % 360;
-      let didBounce = false;
-
-      if (nextX <= 0 || nextX >= bounds.maxX) {
-        logoState.velocityX *= -1;
-        nextX = Math.min(bounds.maxX, Math.max(0, nextX));
-        didBounce = true;
-      }
-
-      if (nextY <= 0 || nextY >= bounds.maxY) {
-        logoState.velocityY *= -1;
-        nextY = Math.min(bounds.maxY, Math.max(0, nextY));
-        didBounce = true;
-      }
-
-      setLogoPosition(logoState, nextX, nextY);
-      setLogoRotation(logoState, nextRotation);
-
-      if (didBounce) {
-        bouncedLogos.push(logoState);
-      }
-    });
-
-    bouncedLogos.forEach(duplicateBouncingLogo);
-    logoLastTime = now;
-    logoAnimationFrame = requestFrame(stepBouncingLogo);
-  }
-
-  function startBouncingLogo(startPosition) {
-    if (!bouncingLogo) {
-      return;
-    }
-
-    const initialState = createBouncingLogoState(bouncingLogo);
-    const bounds = getLogoBounds(initialState.element);
-    const startX = startPosition
-      ? Math.min(bounds.maxX, Math.max(0, startPosition.x))
-      : Math.random() * bounds.maxX;
-    const startY = startPosition
-      ? Math.min(bounds.maxY, Math.max(0, startPosition.y))
-      : Math.random() * bounds.maxY;
-
-    deck.dataset.logoGame = "active";
-    isLogoDocked = false;
-    bouncingLogoStates.splice(0, bouncingLogoStates.length, initialState);
-    bouncingLogo.removeAttribute("data-docked");
-    bouncingLogo.removeAttribute("data-restartable");
-    setLogoRotation(initialState, 0);
-    setLogoPosition(initialState, startX, startY);
-    randomizeLogoRotation(initialState);
-    randomizeLogoVelocity(initialState);
-    logoLastTime = getTime();
-
-    if (logoAnimationFrame) {
-      cancelFrame(logoAnimationFrame);
-    }
-
-    logoAnimationFrame = requestFrame(stepBouncingLogo);
-  }
-
-  function restartBouncingLogos() {
-    const restartLogo = bouncingLogoStates[bouncingLogoStates.length - 1];
-    const restartPosition = restartLogo
-      ? { x: restartLogo.x, y: restartLogo.y }
-      : null;
-
-    bouncingLogoStates.forEach((logoState) => {
-      if (logoState.element !== bouncingLogo) {
-        logoState.element.remove();
-      }
-    });
-    startBouncingLogo(restartPosition);
-  }
-
-  function dockBouncingLogos() {
-    if (!bouncingLogoStates.length || isLogoDocked) {
-      return;
-    }
-
-    isLogoDocked = true;
-    deck.dataset.logoGame = "docked";
-    resetSubmissionIdle();
-
-    if (logoAnimationFrame) {
-      cancelFrame(logoAnimationFrame);
-      logoAnimationFrame = null;
-    }
-
-    bouncingLogoStates.forEach((logoState) => {
-      const position = getDockedLogoPosition(logoState.element);
-
-      logoState.element.setAttribute("data-docked", "true");
-      logoState.element.removeAttribute("data-restartable");
-      setLogoRotation(logoState, 0);
-      setLogoPosition(logoState, position.x, position.y);
-    });
-
-    bouncingLogoStates[bouncingLogoStates.length - 1].element.setAttribute(
-      "data-restartable",
-      "true",
-    );
-  }
-
-  function updateBouncingLogoBounds() {
-    if (!bouncingLogoStates.length) {
-      return;
-    }
-
-    if (isLogoDocked) {
-      bouncingLogoStates.forEach((logoState) => {
-        const position = getDockedLogoPosition(logoState.element);
-
-        setLogoPosition(logoState, position.x, position.y);
-      });
-      return;
-    }
-
-    bouncingLogoStates.forEach((logoState) => {
-      const bounds = getLogoBounds(logoState.element);
-
-      setLogoPosition(
-        logoState,
-        Math.min(bounds.maxX, Math.max(0, logoState.x)),
-        Math.min(bounds.maxY, Math.max(0, logoState.y)),
-      );
-    });
-  }
-
-  function scheduleBouncingLogoBounds() {
-    cancelFrame(logoResizeFrame);
-    logoResizeFrame = requestFrame(updateBouncingLogoBounds);
-  }
-
   function calibrateTitleSize() {
     const referenceTitle = document.querySelector("[data-panel] > .panel-title > button > span");
     const referenceTab = document.querySelector("[data-panel] > .panel-title > button");
@@ -486,7 +148,6 @@
     const size = (availableWidth / measuredWidth) * baseSize;
 
     root.style.setProperty("--label-size", `${size.toFixed(4)}px`);
-    trackDockAnchor();
   }
 
   function scheduleTitleCalibration() {
@@ -498,7 +159,7 @@
     });
   }
 
-  // PROTOTIPO menu: le schede sopra quella aperta spariscono (altezza zero) e lei
+  // Le schede sopra quella aperta spariscono (altezza zero) e lei
   // prende tutto lo spazio; quelle sotto restano come linguette. Va applicato anche
   // quando si misura lo stato d'arrivo di un trascinamento, altrimenti le righe
   // d'arrivo non sommano l'altezza dello schermo e si vede il fondo arancione.
@@ -764,7 +425,6 @@
 
     const changesPanel = deck.dataset.active !== panelName;
     const openingPanel = panels.find((panel) => panel.dataset.panel === panelName);
-    trackDockAnchor();
     deck.style.transition = "none";
     deck.style.gridTemplateRows = "";
     applyPanelState(panelName);
@@ -785,7 +445,6 @@
       });
 
       deck.style.gridTemplateRows = formatRows(currentRows);
-      syncDockAnchor();
       if (changesPanel) openingPanel.scrollTop = 0;
 
       if (progress < 1) {
@@ -825,7 +484,6 @@
       deck.style.gridTemplateRows = "";
       deck.style.transition = "";
       applyPanelState(panelName);
-      trackDockAnchor();
     }
   }
 
@@ -838,10 +496,6 @@
     tab.addEventListener("blur", () => { delete panel.dataset.peekDismissed; });
 
     tab.addEventListener("click", () => {
-      if (deck.dataset.logoGame === "active") {
-        return;
-      }
-
       const panelName = panel.dataset.panel;
       const nextPanel = deck.dataset.active === panelName && panelName !== "home"
         ? "home"
@@ -851,7 +505,7 @@
     });
   });
 
-  // PROTOTIPO menu: il tondo 9PM in basso a destra apre l'elenco delle sezioni
+  // Il tondo 9PM in basso a destra apre l'elenco delle sezioni
   // (passandoci sopra col mouse o toccandolo) e porta direttamente alla scheda.
   const siteMenu = document.querySelector("[data-site-menu]");
   const siteMenuToggle = siteMenu && siteMenu.querySelector("[data-site-menu-toggle]");
@@ -919,8 +573,7 @@
   let navigationLockedUntil = 0;
 
   function canScrollNavigate(target) {
-    return deck.dataset.scrollNavigation !== "false" &&
-      deck.dataset.logoGame !== "active" && !panelAnimationFrame &&
+    return deck.dataset.scrollNavigation !== "false" && !panelAnimationFrame &&
       getTime() >= navigationLockedUntil;
   }
 
@@ -952,7 +605,6 @@
     deck.style.gridTemplateRows = "";
     deck.style.transition = "";
     original.panel.scrollTop = original.scrollTop;
-    trackDockAnchor();
   }
 
   function dragPanel(gesture, next, distance) {
@@ -978,13 +630,11 @@
       };
     }
     if (panelDrag.to !== next.dataset.panel) return;
-    trackDockAnchor();
     panelDrag.progress = Math.min(1, Math.max(0, distance / panelDrag.travel));
     if (!reducedMotion.matches) {
       deck.style.gridTemplateRows = formatRows(panelDrag.startRows.map((row, index) =>
         row + (panelDrag.targetRows[index] - row) * panelDrag.progress
       ));
-      syncDockAnchor();
     }
   }
 
@@ -1102,7 +752,7 @@
 
   // Un unico gestore possiede lo scroll verticale, anche sopra titoli e form.
   deck.addEventListener("wheel", (event) => {
-    if (event.ctrlKey || deck.dataset.scrollNavigation === "false" || deck.dataset.logoGame === "active" ||
+    if (event.ctrlKey || deck.dataset.scrollNavigation === "false" ||
         !event.deltaY || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
     if (event.cancelable) event.preventDefault();
 
@@ -1218,11 +868,11 @@
     }
     delete deck.dataset.submissionNudge;
     deck.style.removeProperty("--submission-nudge-height");
-    if (document.hidden || reducedMotion.matches || deck.dataset.logoGame === "active") return;
+    if (document.hidden || reducedMotion.matches) return;
 
     submissionIdleTimer = window.setTimeout(() => {
       const editing = document.activeElement && document.activeElement.closest("input, textarea, select, [contenteditable]");
-      if (["submissions", "colophon"].includes(deck.dataset.active) || deck.dataset.logoGame === "active" || panelAnimationFrame || panelDrag || editing) return;
+      if (["submissions", "colophon"].includes(deck.dataset.active) || panelAnimationFrame || panelDrag || editing) return;
       const submissionPanel = panels.find((panel) => panel.dataset.panel === "submissions");
       // Le pagine senza sezione Submissions (Side B) non hanno niente da richiamare.
       if (!submissionPanel) return;
@@ -1266,7 +916,6 @@
     document.addEventListener(eventName, resetSubmissionIdle, { passive: true, capture: true });
   });
   document.addEventListener("visibilitychange", resetSubmissionIdle);
-  deck.addEventListener("logo-game-change", resetSubmissionIdle);
   reducedMotion.addEventListener("change", resetSubmissionIdle);
 
   // Scroll nativo a inerzia (dito già sollevato): se arriva al bordo con velocità, rimbalza.
@@ -1325,10 +974,10 @@
     deck.style.transition = "none";
     deck.style.gridTemplateRows = "";
     deck.dataset.active = "colophon";
-    if (typeof setCollapsedAbove === "function") setCollapsedAbove("colophon");
+    setCollapsedAbove("colophon");
     const openHeight = parseRows(getComputedStyle(deck).gridTemplateRows)[index];
     deck.dataset.active = active;
-    if (typeof setCollapsedAbove === "function") setCollapsedAbove(active);
+    setCollapsedAbove(active);
     deck.style.gridTemplateRows = inlineRows;
     deck.getBoundingClientRect();
     deck.style.transition = inlineTransition;
@@ -1344,29 +993,14 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestFrame(pinColophonFooter));
 
   window.addEventListener("resize", scheduleTitleCalibration);
-  window.addEventListener("resize", scheduleBouncingLogoBounds);
-  window.addEventListener("resize", trackDockAnchor);
-  // Anche le transizioni CSS (hover/focus "peek" sul colophon) spostano il bordo.
-  deck.addEventListener("transitionrun", trackDockAnchor);
-  // Modalità moltiplicazione: i loghi a riposo seguono il colophon.
-  deck.addEventListener("dock-anchor-change", () => {
-    if (isLogoDocked) updateBouncingLogoBounds();
-  });
 
   calibrateTitleSize();
   buildSubmissionMarquee();
   const opensSubmissions = location.hash.toLowerCase() === "#submissions";
-  if (deck.dataset.logoGameEnabled !== "false" && deck.dataset.logoGameMode !== "flipper") {
-    startBouncingLogo();
-    if (opensSubmissions) dockBouncingLogos();
-  }
   setActivePanel(opensSubmissions ? "submissions" : "home", false);
 
   window.addEventListener("hashchange", () => {
     if (location.hash.toLowerCase() === "#submissions") {
-      if (deck.dataset.logoGameMode === "flipper") {
-        deck.dispatchEvent(new Event("logo-dock"));
-      } else if (deck.dataset.logoGame === "active") dockBouncingLogos();
       setActivePanel("submissions");
     } else if (!location.hash) {
       setActivePanel("home");

@@ -76,61 +76,6 @@ button {
   font: inherit;
 }
 
-[data-bouncer-logo] {
-  --logo-size: clamp(4.2rem, 11vw, 8.64rem);
-  --logo-x: 0px;
-  --logo-y: 0px;
-  --logo-rotation: 0deg;
-
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 20;
-  display: grid;
-  width: var(--logo-size);
-  aspect-ratio: 1;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  color: var(--home);
-  background: var(--black);
-  cursor: grab;
-  transform: translate3d(var(--logo-x), var(--logo-y), 0);
-  will-change: transform;
-  touch-action: none;
-}
-
-[data-bouncer-logo][data-docked="true"] {
-  cursor: default;
-  pointer-events: none;
-  transition: transform 520ms var(--ease);
-}
-
-/* Mentre segue il colophon il logo non deve inseguire con la transizione. */
-[data-bouncer-logo][data-docked="true"][data-dock-follow="true"] {
-  transition: none;
-}
-
-[data-bouncer-logo][data-restartable="true"] {
-  pointer-events: auto;
-}
-
-[data-bouncer-logo]:focus-visible {
-  outline: 0.18rem solid var(--black);
-  outline-offset: 0.18rem;
-}
-
-[data-bouncer-logo] > img {
-  display: block;
-  width: 54.4%;
-  height: auto;
-  pointer-events: none;
-  transform: rotate(var(--logo-rotation));
-  transform-origin: center;
-  will-change: transform;
-}
-
 .deck {
   --closed-row: calc(var(--strip-height) + 0rem);
   --peek-row: calc(var(--peek-height) + 0rem);
@@ -172,20 +117,28 @@ button {
   --submissions-row: 1fr;
 }
 
-.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="home"]):has([data-panel="home"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
+.deck[data-active="colophon"] {
+  --colophon-row: 1fr;
+}
+
+.deck:not([data-panel-drag]):not([data-active="home"]):has([data-panel="home"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
   --home-row: calc(var(--peek-row) + var(--home-banner-height, 0px));
 }
 
-.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="quartetto"]):has([data-panel="quartetto"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
+.deck:not([data-panel-drag]):not([data-active="quartetto"]):has([data-panel="quartetto"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
   --quartetto-row: calc(var(--peek-row) + var(--quartetto-banner-height, 0px));
 }
 
-.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="format"]):has([data-panel="format"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
+.deck:not([data-panel-drag]):not([data-active="format"]):has([data-panel="format"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
   --format-row: calc(var(--peek-row) + var(--format-banner-height, 0px));
 }
 
-.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="submissions"]):has([data-panel="submissions"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
+.deck:not([data-panel-drag]):not([data-active="submissions"]):has([data-panel="submissions"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
   --submissions-row: calc(var(--peek-row) + var(--submissions-banner-height, 0px));
+}
+
+.deck:not([data-panel-drag]):not([data-active="colophon"]):has([data-panel="colophon"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
+  --colophon-row: calc(var(--peek-row) + var(--colophon-banner-height, 0px));
 }
 
 .deck[data-submission-nudge="true"] > [data-panel="submissions"] {
@@ -193,13 +146,11 @@ button {
   height: calc(100% + var(--submission-nudge-height, 0px));
   transform: translateY(calc(-1 * var(--submission-nudge-height, 0px)));
   overflow: hidden;
+  /* Il filetto anti-fessura qui finirebbe sopra il titolo del colophon. */
+  box-shadow: none;
   will-change: height, transform;
 }
 .deck[data-submission-nudge="true"] #content-submissions { visibility: hidden; }
-
-.deck[data-logo-game="active"] > section > .panel-title > button {
-  pointer-events: none;
-}
 
 .deck > section {
   overflow-anchor: none;
@@ -276,6 +227,10 @@ button {
 
 [data-panel="submissions"] {
   --panel-color: var(--submissions);
+}
+
+[data-panel="colophon"] {
+  --panel-color: #454545;
 }
 
 /* Il titolo è un vero heading (h1 per NINEPM·SESSIONS, h2 per le sezioni);
@@ -378,19 +333,6 @@ button {
   vertical-align: baseline;
 }
 
-#content-quartetto [data-dot-line]::before {
-  content: "";
-  width: 1cap;
-  height: 1cap;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-#content-quartetto [data-dot-line="outline"]::before {
-  border: 1px solid currentColor;
-  background: transparent;
-}
-
 #content-quartetto [data-dot-inline] {
   display: inline-grid;
   grid-template-columns: 1cap auto;
@@ -399,6 +341,7 @@ button {
   white-space: nowrap;
 }
 
+#content-quartetto [data-dot-line]::before,
 #content-quartetto [data-dot-inline]::before {
   content: "";
   width: 1cap;
@@ -677,11 +620,6 @@ button {
 .submission-result { margin: 0; padding: 1rem 0; border-top: 1px solid currentColor; line-height: 1.35; }
 .submission-result:empty { display: none; }
 
-/* Modalità revisioni: riattivare il gioco soltanto all’esportazione definitiva. */
-body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: none; }
-
-/* Responsive e preferenze di movimento: un blocco per condizione. */
-
 .collaboration-content { min-width: 0; font-size: var(--form-font-size); line-height: 1.1; }
 .collaboration-form-column { min-width: 0; }
 .collaboration-intro { margin: 0 0 1.4rem; }
@@ -729,7 +667,6 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
 .footer-socials { display: flex; flex-direction: column; align-items: flex-start; gap: 0; margin: 0; }
 
 [data-panel="colophon"] {
-  --panel-color: #454545;
   display: flex;
   flex-direction: column;
   color: var(--black);
@@ -741,25 +678,21 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
   padding-top: clamp(2rem, 4vw, 4rem);
   padding-bottom: 0.75rem;
 }
-.deck[data-active="colophon"] { --colophon-row: 1fr; }
-.deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="colophon"]):has([data-panel="colophon"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) {
-  --colophon-row: calc(var(--peek-row) + var(--colophon-banner-height, 0px));
-}
 
 @media (hover: hover) {
-  .deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="home"]):has([data-panel="home"]:not([data-peek-dismissed]):hover) {
+  .deck:not([data-panel-drag]):not([data-active="home"]):has([data-panel="home"]:not([data-peek-dismissed]):hover) {
     --home-row: calc(var(--peek-row) + var(--home-banner-height, 0px));
   }
-  .deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="quartetto"]):has([data-panel="quartetto"]:not([data-peek-dismissed]):hover) {
+  .deck:not([data-panel-drag]):not([data-active="quartetto"]):has([data-panel="quartetto"]:not([data-peek-dismissed]):hover) {
     --quartetto-row: calc(var(--peek-row) + var(--quartetto-banner-height, 0px));
   }
-  .deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="format"]):has([data-panel="format"]:not([data-peek-dismissed]):hover) {
+  .deck:not([data-panel-drag]):not([data-active="format"]):has([data-panel="format"]:not([data-peek-dismissed]):hover) {
     --format-row: calc(var(--peek-row) + var(--format-banner-height, 0px));
   }
-  .deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="submissions"]):has([data-panel="submissions"]:not([data-peek-dismissed]):hover) {
+  .deck:not([data-panel-drag]):not([data-active="submissions"]):has([data-panel="submissions"]:not([data-peek-dismissed]):hover) {
     --submissions-row: calc(var(--peek-row) + var(--submissions-banner-height, 0px));
   }
-  .deck:not([data-panel-drag]):not([data-logo-game="active"]):not([data-active="colophon"]):has([data-panel="colophon"]:not([data-peek-dismissed]):hover) {
+  .deck:not([data-panel-drag]):not([data-active="colophon"]):has([data-panel="colophon"]:not([data-peek-dismissed]):hover) {
     --colophon-row: calc(var(--peek-row) + var(--colophon-banner-height, 0px));
   }
 }
@@ -775,7 +708,7 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
 }
 
 @media (max-width: 720px) {
-:root {
+  :root {
     --strip-ratio: 0.6;
     --content-top: calc(var(--label-size) * 1.24 + clamp(12rem, 60vw, 18rem));
     --title-margin: clamp(0.18rem, 0.95vw, 0.35rem);
@@ -783,6 +716,7 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
     --title-line-height: 0.86;
     --marquee-height: clamp(1.4rem, 6vw, 1.7rem);
     --content-font-size: clamp(1.4365rem, 7.098vw, 1.69rem);
+    --form-font-size: 1.1rem;
   }
 
   .deck {
@@ -819,14 +753,11 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
   .submission-content { grid-column: auto; }
   .submission-guidelines { overflow-wrap: anywhere; }
 
-  /* Adattamenti mobili dei form. */
-  :root { --form-font-size: 1.1rem; }
   .panel-content > .submission-section { row-gap: 1.25rem; }
   .footer-main, .footer-technical {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
   }
-  .footer-main { align-items: end; }
   .footer-copyright { grid-column: 1; }
   .footer-design { grid-column: 2; }
   .footer-information { display: grid; gap: 1rem; }
@@ -835,14 +766,13 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
 }
 
 @media (max-width: 460px) {
-.panel-content {
+  .panel-content {
     line-height: 0.98;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-.deck,
-  .panel-content {
+  .deck {
     transition-duration: 1ms;
   }
 
@@ -852,7 +782,152 @@ body:has(.deck[data-logo-game-enabled="false"]) [data-bouncer-logo] { display: n
   }
 }
 
-/* Flipper usa un solo logo e riserva il trascinamento alla pallina. */
-[data-bouncer-logo][data-flipper="true"] { user-select: none; -webkit-user-select: none; }
-[data-bouncer-logo][data-flipper="true"][data-docked="true"] { pointer-events: auto; cursor: grab; }
-[data-bouncer-logo][data-flipper="true"][data-dragging="true"] { cursor: grabbing; transition: none; }
+/* Menu nel tondo 9PM.
+   Il tondo nero con il logo sta fisso in basso a destra. Passandoci sopra col
+   mouse (o toccandolo) si apre a sinistra una pillola nera con le sezioni.
+   Submissions ha il punto giallo della fascia OPEN FOR SEASON 3. */
+
+.site-menu {
+  --menu-size: clamp(3.6rem, 6.2vw, 5.2rem);
+  --menu-ink: #FFF8E4;
+
+  position: fixed;
+  right: clamp(0.8rem, 2vw, 1.6rem);
+  bottom: clamp(0.8rem, 2vw, 1.6rem);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  color: var(--menu-ink);
+}
+
+.site-menu-toggle {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--menu-size);
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--black);
+  cursor: pointer;
+}
+
+.site-menu-toggle > img {
+  display: block;
+  width: 56%;
+  height: auto;
+  pointer-events: none;
+  transition: transform 420ms var(--ease);
+}
+
+.site-menu[data-open="true"] .site-menu-toggle > img {
+  transform: rotate(-12deg);
+}
+
+.site-menu-toggle:focus-visible {
+  outline: 0.18rem solid var(--black);
+  outline-offset: 0.18rem;
+}
+
+/* La pillola esce da dietro il tondo e si allunga verso sinistra. */
+.site-menu-list {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.9rem, 1.6vw, 1.6rem);
+  height: var(--menu-size);
+  margin: 0 calc(var(--menu-size) * -0.5) 0 0;
+  padding: 0 calc(var(--menu-size) * 0.5 + 1.1rem) 0 1.4rem;
+  list-style: none;
+  border-radius: calc(var(--menu-size) / 2);
+  background: var(--black);
+  clip-path: inset(0 0 0 100% round calc(var(--menu-size) / 2));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    clip-path 420ms var(--ease),
+    opacity 200ms var(--ease);
+}
+
+.site-menu[data-open="true"] .site-menu-list {
+  clip-path: inset(0 0 0 0 round calc(var(--menu-size) / 2));
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.site-menu-list button {
+  margin: 0;
+  padding: 0.2em 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: clamp(0.95rem, 1.25vw, 1.15rem);
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  /* Voci attenuate col colore, non con l'opacità: il punto giallo resta pieno. */
+  color: rgb(255 248 228 / 0.6);
+  transition: color 160ms var(--ease);
+}
+
+.site-menu-list button:hover,
+.site-menu-list button:focus-visible,
+.site-menu-list button[aria-current="true"] {
+  color: var(--menu-ink);
+}
+
+.site-menu-list button[aria-current="true"] {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+
+.site-menu-list button:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 0.3em;
+}
+
+.site-menu-highlight::before {
+  content: "";
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  margin-right: 0.45em;
+  border-radius: 50%;
+  background: #FFC93F;
+  vertical-align: 0.05em;
+}
+
+/* Telefono: la pillola si apre verso l'alto, in colonna. */
+@media (max-width: 720px) {
+  .site-menu {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .site-menu-list {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1rem;
+    height: auto;
+    margin: 0 0 calc(var(--menu-size) * -0.5) 0;
+    padding: 1.3rem 1.3rem calc(var(--menu-size) * 0.5 + 1rem);
+    clip-path: inset(100% 0 0 0 round calc(var(--menu-size) / 2));
+  }
+
+  .site-menu-list button {
+    font-size: 1.15rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-menu-list,
+  .site-menu-toggle > img {
+    transition: none;
+  }
+}

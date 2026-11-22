@@ -46,7 +46,7 @@
   let selectedDay = null;
   let selectedSlot = null;
 
-  // Niente calendario: solo le date di registrazione presenti nel foglio, divise per mese.
+  // Niente calendario: solo le date presenti nel foglio, una per riga.
   function renderDates() {
     const keys = Object.keys(days).filter((key) => key >= todayKey).sort();
     list.replaceChildren();
@@ -57,13 +57,12 @@
       list.append(note);
       return;
     }
-    // Tutte le date in fila, una casella ciascuna: giorno e mese stanno nella casella.
     const grid = document.createElement("div");
     grid.className = "agenda-grid";
     keys.forEach((key) => grid.append(buildCell(key)));
     list.append(grid);
-    markLastColumn();
-    if (selectedDay) placeExpand();
+    const cell = selectedDay && grid.querySelector(`[data-day="${selectedDay}"]`);
+    if (cell) cell.after(buildExpand());
   }
 
   function buildCell(key) {
@@ -94,39 +93,8 @@
     return cell;
   }
 
-  // L'ultima casella di ogni riga non ha il filetto a destra (cade sul bordo).
-  function markLastColumn() {
-    list.querySelectorAll(".agenda-grid").forEach((grid) => {
-      const columns = getComputedStyle(grid).gridTemplateColumns.split(" ").length || 1;
-      grid.querySelectorAll(".agenda-cell").forEach((cell, index) => {
-        if (index % columns === columns - 1) cell.dataset.lastColumn = "";
-        else delete cell.dataset.lastColumn;
-      });
-    });
-  }
-
-  // La fascia del giorno aperto va sotto la riga della sua casella.
-  function placeExpand() {
-    const cell = list.querySelector(`[data-day="${selectedDay}"]`);
-    if (!cell) return;
-    const grid = cell.parentElement;
-    const cells = Array.from(grid.querySelectorAll(".agenda-cell"));
-    const columns = getComputedStyle(grid).gridTemplateColumns.split(" ").length || 1;
-    const index = cells.indexOf(cell);
-    const rowEnd = cells[Math.min(cells.length - 1, Math.floor(index / columns) * columns + columns - 1)];
-    const expand = buildExpand();
-    rowEnd.after(expand);
-    if (!animateOpen) expand.dataset.open = "";
-  }
-
-  // Il mese è già scritto sopra la griglia: qui solo giorno della settimana e numero.
-  function dayTitle(key) {
-    const [y, m, d] = key.split("-").map(Number);
-    return `${dayNames[new Date(y, m - 1, d).getDay()]} ${d}`;
-  }
-
-  // Il giorno si apre dentro la griglia: si allarga sotto la sua settimana,
-  // con slot, nome/progetto e prenotazione. Ricliccandolo si richiude.
+  // Il giorno si apre sotto la sua riga, con slot, nome/progetto e prenotazione.
+  // Ricliccandolo si richiude.
   // Chiusura con la stessa animazione dell'apertura, al contrario.
   function closeDay() {
     const expand = list.querySelector(".agenda-expand");
@@ -164,14 +132,10 @@
       closeDay();
       return;
     }
-    const opening = true;
-    selectedDay = opening ? key : null;
+    selectedDay = key;
     selectedSlot = null;
     bookedMessage = "";
-    animateOpen = opening;
     renderDates();
-    animateOpen = false;
-    if (!opening) return;
     const expand = list.querySelector(".agenda-expand");
     if (!expand) return;
     // La sezione resta ferma: la fascia si apre sotto la riga e chi vuole scorre.
@@ -181,7 +145,6 @@
   }
 
   let bookedMessage = "";
-  let animateOpen = false;
 
   function buildExpand() {
     const expand = document.createElement("div");
@@ -302,16 +265,6 @@
     const cell = list.querySelector(`[data-day="${key}"]`);
     if (cell) cell.querySelector(".agenda-note").textContent = freeLabel(key);
   }
-
-  // Se cambia il numero di colonne (rotazione, finestra) la fascia torna al suo posto.
-  let columnsSeen = "";
-  window.addEventListener("resize", () => {
-    const grid = list.querySelector(".agenda-grid");
-    const columns = grid ? getComputedStyle(grid).gridTemplateColumns.split(" ").length : 0;
-    if (String(columns) === columnsSeen) return;
-    columnsSeen = String(columns);
-    renderDates();
-  });
 
   function start(slots) {
     setSlots(slots);
