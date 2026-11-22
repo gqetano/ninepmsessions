@@ -23,10 +23,7 @@
     "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
   const dayNames = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
 
-  const monthLabel = root.querySelector("[data-agenda-month]");
-  const grid = root.querySelector("[data-agenda-grid]");
-  const prev = root.querySelector("[data-agenda-prev]");
-  const next = root.querySelector("[data-agenda-next]");
+  const list = root.querySelector("[data-agenda-list]");
 
   const pad = (n) => String(n).padStart(2, "0");
   const keyOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
@@ -38,84 +35,96 @@
   }
 
   function dayState(key) {
-    if (!days[key] || key < todayKey) return "off";
     return freeSlots(key).length ? "open" : "full";
   }
 
-  // Mesi navigabili: dal primo all'ultimo con sessioni (almeno il mese corrente).
-  const monthIndex = (key) => Number(key.slice(0, 4)) * 12 + Number(key.slice(5, 7)) - 1;
-  let firstMonth = monthIndex(todayKey);
-  let lastMonth = firstMonth;
-  let current = firstMonth;
-
-  function setRange() {
-    const keys = Object.keys(days).filter((key) => key >= todayKey).sort();
-    firstMonth = monthIndex(todayKey);
-    lastMonth = keys.length ? Math.max(firstMonth, monthIndex(keys[keys.length - 1])) : firstMonth;
-    const firstOpen = keys.find((key) => dayState(key) === "open");
-    current = firstOpen ? monthIndex(firstOpen) : firstMonth;
+  function freeLabel(key) {
+    const free = freeSlots(key).length;
+    return free ? (free === 1 ? "1 slot libero" : `${free} slot liberi`) : "completo";
   }
+
   let selectedDay = null;
   let selectedSlot = null;
 
-  function renderMonth() {
-    const year = Math.floor(current / 12);
-    const month = current % 12;
-    monthLabel.textContent = `${monthNames[month]} ${year}`;
-    prev.disabled = current <= firstMonth;
-    next.disabled = current >= lastMonth;
-
-    const offset = (new Date(year, month, 1).getDay() + 6) % 7; // settimana da lunedì
-    const days = new Date(year, month + 1, 0).getDate();
-    const cells = Math.ceil((offset + days) / 7) * 7;
-    grid.replaceChildren();
-
-    for (let i = 0; i < cells; i += 1) {
-      const day = i - offset + 1;
-      if (day < 1 || day > days) {
-        const empty = document.createElement("div");
-        empty.className = "agenda-cell";
-        empty.dataset.empty = "";
-        if (i % 7 === 0) empty.dataset.firstColumn = "";
-        grid.append(empty);
-        continue;
-      }
-      const key = keyOf(year, month, day);
-      const state = dayState(key);
-      const cell = document.createElement(state === "open" ? "button" : "div");
-      cell.className = "agenda-cell";
-      cell.dataset.state = state;
-      cell.dataset.day = key;
-      if (i % 7 === 0) cell.dataset.firstColumn = "";
-      const number = document.createElement("span");
-      number.className = "agenda-number";
-      number.textContent = pad(day);
-      const note = document.createElement("span");
-      note.className = "agenda-note";
-      if (state === "open") {
-        const free = freeSlots(key).length;
-        note.textContent = free === 1 ? "1 slot libero" : `${free} slot liberi`;
-        cell.type = "button";
-        cell.setAttribute("aria-pressed", String(selectedDay === key));
-        cell.setAttribute("aria-label", `${dayNames[new Date(year, month, day).getDay()]} ${day} ${monthNames[month]}, ${note.textContent}`);
-        cell.addEventListener("click", () => openDay(key));
-      } else if (state === "full") {
-        note.textContent = "completo";
-      }
-      cell.append(number, note);
-      grid.append(cell);
+  // Niente calendario: solo le date di registrazione presenti nel foglio, divise per mese.
+  function renderDates() {
+    const keys = Object.keys(days).filter((key) => key >= todayKey).sort();
+    list.replaceChildren();
+    if (!keys.length) {
+      const note = document.createElement("p");
+      note.className = "agenda-empty";
+      note.textContent = "Le date della stagione arrivano a breve.";
+      list.append(note);
+      return;
     }
-    if (selectedDay) {
-      const cellsNow = Array.from(grid.children);
-      const index = cellsNow.findIndex((item) => item.dataset.day === selectedDay);
-      if (index >= 0) {
-        const weekEnd = cellsNow[Math.min(cellsNow.length - 1, Math.floor(index / 7) * 7 + 6)];
-        const expand = buildExpand();
-        expand.style.setProperty("--from-column", String((index % 7) + 1));
-        weekEnd.after(expand);
-        if (!animateOpen) expand.dataset.open = "";
-      }
+    const months = {};
+    keys.forEach((key) => { (months[key.slice(0, 7)] = months[key.slice(0, 7)] || []).push(key); });
+    Object.entries(months).forEach(([month, monthKeys]) => {
+      const block = document.createElement("section");
+      block.className = "agenda-month-block";
+      const [y, m] = month.split("-").map(Number);
+      const title = document.createElement("h3");
+      title.className = "agenda-month";
+      title.textContent = `${monthNames[m - 1]} ${y}`;
+      const grid = document.createElement("div");
+      grid.className = "agenda-grid";
+      monthKeys.forEach((key) => grid.append(buildCell(key)));
+      block.append(title, grid);
+      list.append(block);
+    });
+    markLastColumn();
+    if (selectedDay) placeExpand();
+  }
+
+  function buildCell(key) {
+    const [y, m, d] = key.split("-").map(Number);
+    const state = dayState(key);
+    const cell = document.createElement(state === "open" ? "button" : "div");
+    cell.className = "agenda-cell";
+    cell.dataset.state = state;
+    cell.dataset.day = key;
+    const weekday = document.createElement("span");
+    weekday.className = "agenda-weekday";
+    weekday.textContent = dayNames[new Date(y, m - 1, d).getDay()];
+    const number = document.createElement("span");
+    number.className = "agenda-number";
+    number.textContent = pad(d);
+    const note = document.createElement("span");
+    note.className = "agenda-note";
+    note.textContent = freeLabel(key);
+    if (state === "open") {
+      cell.type = "button";
+      cell.setAttribute("aria-pressed", String(selectedDay === key));
+      cell.setAttribute("aria-label", `${weekday.textContent} ${d} ${monthNames[m - 1]}, ${note.textContent}`);
+      cell.addEventListener("click", () => openDay(key));
     }
+    cell.append(weekday, number, note);
+    return cell;
+  }
+
+  // L'ultima casella di ogni riga non ha il filetto a destra (cade sul bordo).
+  function markLastColumn() {
+    list.querySelectorAll(".agenda-grid").forEach((grid) => {
+      const columns = getComputedStyle(grid).gridTemplateColumns.split(" ").length || 1;
+      grid.querySelectorAll(".agenda-cell").forEach((cell, index) => {
+        if (index % columns === columns - 1) cell.dataset.lastColumn = "";
+        else delete cell.dataset.lastColumn;
+      });
+    });
+  }
+
+  // La fascia del giorno aperto va sotto la riga della sua casella.
+  function placeExpand() {
+    const cell = list.querySelector(`[data-day="${selectedDay}"]`);
+    if (!cell) return;
+    const grid = cell.parentElement;
+    const cells = Array.from(grid.querySelectorAll(".agenda-cell"));
+    const columns = getComputedStyle(grid).gridTemplateColumns.split(" ").length || 1;
+    const index = cells.indexOf(cell);
+    const rowEnd = cells[Math.min(cells.length - 1, Math.floor(index / columns) * columns + columns - 1)];
+    const expand = buildExpand();
+    rowEnd.after(expand);
+    if (!animateOpen) expand.dataset.open = "";
   }
 
   // Il mese è già scritto sopra la griglia: qui solo giorno della settimana e numero.
@@ -128,20 +137,20 @@
   // con slot, nome/progetto e prenotazione. Ricliccandolo si richiude.
   // Chiusura con la stessa animazione dell'apertura, al contrario.
   function closeDay() {
-    const expand = grid.querySelector(".agenda-expand");
+    const expand = list.querySelector(".agenda-expand");
     selectedDay = null;
     selectedSlot = null;
     bookedMessage = "";
     // Il giorno resta nero finché la fascia non si è richiusa del tutto.
     if (!expand || reducedMotion()) {
-      renderMonth();
+      renderDates();
       return;
     }
     let finished = false;
     const finish = () => {
       if (finished) return;
       finished = true;
-      if (!selectedDay) renderMonth();
+      if (!selectedDay) renderDates();
     };
     expand.addEventListener("transitionend", finish, { once: true });
     window.setTimeout(finish, 700);
@@ -162,14 +171,14 @@
     selectedSlot = null;
     bookedMessage = "";
     animateOpen = opening;
-    renderMonth();
+    renderDates();
     animateOpen = false;
     if (!opening) return;
-    const expand = grid.querySelector(".agenda-expand");
+    const expand = list.querySelector(".agenda-expand");
     if (!expand) return;
     requestAnimationFrame(() => {
       expand.dataset.open = "";
-      const cell = grid.querySelector(`[data-day="${key}"]`);
+      const cell = list.querySelector(`[data-day="${key}"]`);
       window.setTimeout(() => cell && cell.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
     });
   }
@@ -294,38 +303,26 @@
 
   // Aggiorna la nota della casella senza richiudere il giorno.
   function refreshCell(key) {
-    const cell = grid.querySelector(`[data-day="${key}"]`);
-    if (!cell) return;
-    const free = freeSlots(key).length;
-    cell.querySelector(".agenda-note").textContent = free ? (free === 1 ? "1 slot libero" : `${free} slot liberi`) : "completo";
+    const cell = list.querySelector(`[data-day="${key}"]`);
+    if (cell) cell.querySelector(".agenda-note").textContent = freeLabel(key);
   }
 
-  prev.addEventListener("click", () => {
-    if (current > firstMonth) { current -= 1; selectedDay = null; renderMonth(); }
-  });
-  next.addEventListener("click", () => {
-    if (current < lastMonth) { current += 1; selectedDay = null; renderMonth(); }
+  // Se cambia il numero di colonne (rotazione, finestra) la fascia torna al suo posto.
+  let columnsSeen = "";
+  window.addEventListener("resize", () => {
+    const grid = list.querySelector(".agenda-grid");
+    const columns = grid ? getComputedStyle(grid).gridTemplateColumns.split(" ").length : 0;
+    if (String(columns) === columnsSeen) return;
+    columnsSeen = String(columns);
+    renderDates();
   });
 
-  function showMessage(text) {
-    grid.replaceChildren();
-    const note = document.createElement("p");
-    note.className = "agenda-empty";
-    note.textContent = text;
-    grid.append(note);
-  }
-
-  function start(list) {
-    setSlots(list);
-    setRange();
-    renderMonth();
-    if (!Object.keys(days).some((key) => key >= todayKey)) {
-      showMessage("Le date della stagione arrivano a breve.");
-    }
+  function start(slots) {
+    setSlots(slots);
+    renderDates();
   }
 
   if (source) {
-    monthLabel.textContent = "…";
     fetch(source)
       .then((response) => response.json())
       .then((reply) => start(reply.slots || []))
