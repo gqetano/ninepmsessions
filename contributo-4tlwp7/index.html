@@ -137,7 +137,7 @@
         // Link non valido: si mostra la home "link scaduto", con lo stesso script del sito.
         const closed = () => {
           gate.hidden = false;
-          load("../script.js?v=bounce-20261122-3");
+          load("../script.js?v=bounce-20261122-4");
         };
         try {
           const key = location.hash.slice(1);
@@ -160,7 +160,7 @@
             old.replaceWith(fresh);
           });
           gate.replaceWith(template.content);
-          await load("../script.js?v=bounce-20261122-3");
+          await load("../script.js?v=bounce-20261122-4");
           await load("../agenda.js?v=agenda-20261122-8");
         } catch (error) {
           closed();

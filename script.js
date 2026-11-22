@@ -826,6 +826,7 @@
   let lastWheelTime = -Infinity;
   let lastWheelDelta = 0;
   let wheelSpeed = 0;
+  let bounceSpent = false;
   let lastContentScrollTime = -Infinity;
   let lastEdgePush = -Infinity;
   const edgeCooldown = 350;
@@ -1077,12 +1078,14 @@
       // Il testo è arrivato al bordo: un solo rimbalzo con la velocità che aveva.
       // L'inerzia che continua ad arrivare non lo prolunga; un nuovo gesto sì.
       const leftover = delta - moved;
-      const springing = overscrollActive(panel) || (overscroll.panel === panel && overscroll.frame);
-      // Un nuovo gesto rilancia il rimbalzo solo quando il testo sta già tornando.
-      const relaunch = (accelerating || wheelNotch) && Math.sign(overscroll.v) !== Math.sign(leftover);
-      if (Math.abs(leftover) > 0.5 && (!springing || relaunch)) {
-        const speed = Math.max(800, Math.min(4000, Math.abs(wheelSpeed)));
+      // Un solo rimbalzo per gesto: l'inerzia del trackpad (che sul Mac dura oltre
+      // un secondo) non deve farne partire un secondo dopo il primo. Si riarma solo
+      // dopo una pausa vera o con un gesto nuovo (swipe deciso o scatto di rotella).
+      if (gap > 160 || accelerating || wheelNotch) bounceSpent = false;
+      if (Math.abs(leftover) > 0.5 && !bounceSpent) {
+        const speed = Math.max(900, Math.min(4000, Math.abs(wheelSpeed)));
         kickOverscroll(panel, Math.sign(leftover) * speed);
+        bounceSpent = true;
       }
       return;
     }
