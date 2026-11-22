@@ -619,6 +619,18 @@
     const limit = overscrollLimit(overscroll.panel) * 1.15;
     const shown = Math.max(-limit, Math.min(limit, overscroll.x));
     overscroll.content.style.transform = Math.abs(shown) < 0.3 ? "" : `translateY(${(-shown).toFixed(2)}px)`;
+    // La barra segue il rimbalzo: si schiaccia contro il bordo verso cui si spinge.
+    const bar = scrollBars.get(overscroll.panel);
+    if (!bar) return;
+    const thumb = parseFloat(bar.style.getPropertyValue("--scroll-bar-thumb")) || 0;
+    const squash = Math.min(thumb * 0.55, Math.abs(shown) * 0.9);
+    if (squash < 0.3) {
+      bar.style.removeProperty("--scroll-bar-squash");
+      bar.style.removeProperty("--scroll-bar-squash-shift");
+      return;
+    }
+    bar.style.setProperty("--scroll-bar-squash", `${squash.toFixed(2)}px`);
+    bar.style.setProperty("--scroll-bar-squash-shift", shown > 0 ? `${squash.toFixed(2)}px` : "0px");
   }
 
   // Dopo il rimbalzo serve una pausa prima di poter passare alla sezione successiva:

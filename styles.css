@@ -250,9 +250,12 @@ button {
   top: 0;
   right: 0;
   left: 0;
-  height: var(--scroll-bar-thumb, 0px);
+  /* Durante il rimbalzo di fine testo la barra si schiaccia contro il bordo,
+     come su iPhone: --scroll-bar-squash la accorcia, --scroll-bar-squash-shift
+     la tiene attaccata al fondo (da script.js). */
+  height: calc(var(--scroll-bar-thumb, 0px) - var(--scroll-bar-squash, 0px));
   background: currentColor;
-  transform: translateY(var(--scroll-bar-offset, 0px));
+  transform: translateY(calc(var(--scroll-bar-offset, 0px) + var(--scroll-bar-squash-shift, 0px)));
 }
 
 [data-panel="home"] {
