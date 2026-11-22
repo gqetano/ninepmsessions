@@ -13,10 +13,11 @@
     <link rel="icon" type="image/png" href="assets/favicon.png?v=3" sizes="512x512">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=3" sizes="any">
     <link rel="stylesheet" href="styles.css?v=seam-20261122-6">
+    <link rel="stylesheet" href="menu.css?v=menu-1">
   </head>
   <body>
     <!-- Giochi: flipper attivo; moltiplicazione conservato e spento. -->
-    <main class="deck" data-logo-game-enabled="true" data-logo-game-mode="flipper" data-scroll-navigation="experimental" data-active="home" aria-label="Navigazione principale a schede">
+    <main class="deck" data-stack-mode="collapse-above" data-logo-game-enabled="false" data-logo-game-mode="flipper" data-scroll-navigation="experimental" data-active="home" aria-label="Navigazione principale a schede">
       <section data-panel="home">
         <h1 class="panel-title">
           <button type="button" aria-expanded="true" aria-controls="content-home">
@@ -231,12 +232,22 @@
       </section>
     </main>
 
-    <button type="button" data-bouncer-logo aria-label="Posiziona il logo 9PM">
-      <img src="assets/9pm_logo.svg" alt="" aria-hidden="true">
-    </button>
+    <!-- PROTOTIPO menu: il tondo 9PM fa da menu. Il gioco del logo per ora è spento. -->
+    <nav class="site-menu" data-site-menu aria-label="Sezioni del sito">
+      <ul class="site-menu-list" id="site-menu-list">
+        <li><button type="button" data-menu-target="home">Home</button></li>
+        <li><button type="button" data-menu-target="quartetto">Quartetto</button></li>
+        <li><button type="button" data-menu-target="format">Format</button></li>
+        <li><button type="button" data-menu-target="submissions" class="site-menu-highlight">Submissions</button></li>
+        <li><button type="button" data-menu-target="colophon">Contatti</button></li>
+      </ul>
+      <button type="button" class="site-menu-toggle" data-site-menu-toggle aria-controls="site-menu-list" aria-expanded="false" aria-label="Apri il menu">
+        <img src="assets/9pm_logo.svg" alt="" aria-hidden="true">
+      </button>
+    </nav>
 
     <script src="submissions.js?v=url-20261020-1"></script>
-    <script src="script.js?v=bounce-20261122-6"></script>
+    <script src="script.js?v=menu-1"></script>
     <script src="flipper.js?v=dock-20261020-1"></script>
     <script data-goatcounter="https://9pmsessions.goatcounter.com/count"
             async src="https://gc.zgo.at/count.js"></script>

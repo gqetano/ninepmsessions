@@ -500,6 +500,20 @@
   function applyPanelState(panelName) {
     const previousPanel = deck.dataset.active;
     deck.dataset.active = panelName;
+    // PROTOTIPO menu: le schede sopra quella aperta spariscono (altezza zero) e lei
+    // prende tutto lo spazio; quelle sotto restano come linguette.
+    const activeIndex = panels.findIndex((panel) => panel.dataset.panel === panelName);
+    panels.forEach((panel, index) => {
+      const variable = `--${panel.dataset.panel}-row`;
+      if (deck.dataset.stackMode === "collapse-above" && index < activeIndex) {
+        deck.style.setProperty(variable, "0px");
+        panel.dataset.above = "";
+      } else {
+        deck.style.removeProperty(variable);
+        delete panel.dataset.above;
+      }
+    });
+    syncSiteMenu(panelName);
     panels.forEach((panel) => {
       const isActive = panel.dataset.panel === panelName;
       const tab = panel.querySelector("button");
@@ -829,6 +843,58 @@
       setActivePanel(nextPanel);
     });
   });
+
+  // PROTOTIPO menu: il tondo 9PM in basso a destra apre l'elenco delle sezioni
+  // (passandoci sopra col mouse o toccandolo) e porta direttamente alla scheda.
+  const siteMenu = document.querySelector("[data-site-menu]");
+  const siteMenuToggle = siteMenu && siteMenu.querySelector("[data-site-menu-toggle]");
+  function setSiteMenuOpen(open) {
+    if (!siteMenu) return;
+    siteMenu.dataset.open = String(open);
+    siteMenuToggle.setAttribute("aria-expanded", String(open));
+    siteMenuToggle.setAttribute("aria-label", open ? "Chiudi il menu" : "Apri il menu");
+  }
+  function syncSiteMenu(panelName) {
+    if (!siteMenu) return;
+    siteMenu.querySelectorAll("[data-menu-target]").forEach((item) => {
+      if (item.dataset.menuTarget === panelName) item.setAttribute("aria-current", "true");
+      else item.removeAttribute("aria-current");
+    });
+  }
+  if (siteMenu) {
+    const hoverCapable = window.matchMedia("(hover: hover) and (pointer: fine)");
+    let closeTimer = 0;
+    siteMenu.addEventListener("pointerenter", (event) => {
+      if (event.pointerType !== "mouse" || !hoverCapable.matches) return;
+      window.clearTimeout(closeTimer);
+      setSiteMenuOpen(true);
+    });
+    siteMenu.addEventListener("pointerleave", (event) => {
+      if (event.pointerType !== "mouse" || !hoverCapable.matches) return;
+      closeTimer = window.setTimeout(() => setSiteMenuOpen(false), 220);
+    });
+    // Col mouse il menu è già aperto dal passaggio sopra: il clic non lo richiude.
+    siteMenuToggle.addEventListener("click", (event) => {
+      if (event.pointerType === "mouse" && hoverCapable.matches) setSiteMenuOpen(true);
+      else setSiteMenuOpen(siteMenu.dataset.open !== "true");
+    });
+    siteMenu.querySelectorAll("[data-menu-target]").forEach((item) => {
+      item.addEventListener("click", () => {
+        setActivePanel(item.dataset.menuTarget);
+        setSiteMenuOpen(false);
+      });
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && siteMenu.dataset.open === "true") {
+        setSiteMenuOpen(false);
+        siteMenuToggle.focus();
+      }
+    });
+    document.addEventListener("pointerdown", (event) => {
+      if (siteMenu.dataset.open === "true" && !siteMenu.contains(event.target)) setSiteMenuOpen(false);
+    });
+    setSiteMenuOpen(false);
+  }
 
   // Prova disattivabile con data-scroll-navigation="false" sul main.
   const editableFields = "input, textarea, select, [contenteditable]";

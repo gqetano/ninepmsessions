@@ -1,0 +1,153 @@
+/* PROTOTIPO — Menu nel tondo 9PM.
+   Il tondo nero con il logo sta fisso in basso a destra. Passandoci sopra col
+   mouse (o toccandolo) si apre a sinistra una pillola nera con le sezioni.
+   Submissions ha il punto giallo della fascia OPEN FOR SEASON 3. */
+
+.site-menu {
+  --menu-size: clamp(3.6rem, 6.2vw, 5.2rem);
+  --menu-ink: #FFF8E4;
+
+  position: fixed;
+  right: clamp(0.8rem, 2vw, 1.6rem);
+  bottom: clamp(0.8rem, 2vw, 1.6rem);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  color: var(--menu-ink);
+}
+
+.site-menu-toggle {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--menu-size);
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--black);
+  cursor: pointer;
+  transition: transform 260ms var(--ease);
+}
+
+.site-menu-toggle > img {
+  display: block;
+  width: 56%;
+  height: auto;
+  pointer-events: none;
+  transition: transform 420ms var(--ease);
+}
+
+.site-menu[data-open="true"] .site-menu-toggle > img {
+  transform: rotate(-12deg);
+}
+
+.site-menu-toggle:focus-visible {
+  outline: 0.18rem solid var(--black);
+  outline-offset: 0.18rem;
+}
+
+/* La pillola esce da dietro il tondo e si allunga verso sinistra. */
+.site-menu-list {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.9rem, 1.6vw, 1.6rem);
+  height: var(--menu-size);
+  margin: 0 calc(var(--menu-size) * -0.5) 0 0;
+  padding: 0 calc(var(--menu-size) * 0.5 + 1.1rem) 0 1.4rem;
+  list-style: none;
+  border-radius: calc(var(--menu-size) / 2);
+  background: var(--black);
+  clip-path: inset(0 0 0 100% round calc(var(--menu-size) / 2));
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    clip-path 420ms var(--ease),
+    opacity 200ms var(--ease);
+}
+
+.site-menu[data-open="true"] .site-menu-list {
+  clip-path: inset(0 0 0 0 round calc(var(--menu-size) / 2));
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.site-menu-list button {
+  margin: 0;
+  padding: 0.2em 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: clamp(0.95rem, 1.25vw, 1.15rem);
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  /* Voci attenuate col colore, non con l'opacità: il punto giallo resta pieno. */
+  color: rgb(255 248 228 / 0.6);
+  transition: color 160ms var(--ease);
+}
+
+.site-menu-list button:hover,
+.site-menu-list button:focus-visible,
+.site-menu-list button[aria-current="true"] {
+  color: var(--menu-ink);
+}
+
+.site-menu-list button[aria-current="true"] {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+
+.site-menu-list button:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 0.3em;
+}
+
+.site-menu-highlight::before {
+  content: "";
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  margin-right: 0.45em;
+  border-radius: 50%;
+  background: #FFC93F;
+  vertical-align: 0.05em;
+}
+
+/* Telefono: la pillola si apre verso l'alto, in colonna. */
+@media (max-width: 720px) {
+  .site-menu {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .site-menu-list {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1rem;
+    height: auto;
+    margin: 0 0 calc(var(--menu-size) * -0.5) 0;
+    padding: 1.3rem 1.3rem calc(var(--menu-size) * 0.5 + 1rem);
+    border-radius: calc(var(--menu-size) / 2);
+    clip-path: inset(100% 0 0 0 round calc(var(--menu-size) / 2));
+  }
+
+  .site-menu-list button {
+    font-size: 1.15rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-menu-list,
+  .site-menu-toggle > img {
+    transition: none;
+  }
+}
