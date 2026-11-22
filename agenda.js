@@ -138,11 +138,17 @@
       renderDates();
       return;
     }
+    // A fascia chiusa si toglie solo la fascia e si spegne la riga, senza ricostruire
+    // la lista: ricostruirla faceva lampeggiare la riga sotto il mouse.
+    const cell = expand.previousElementSibling;
     let finished = false;
     const finish = () => {
       if (finished) return;
       finished = true;
-      if (!selectedDay) renderDates();
+      if (selectedDay) return;
+      expand.remove();
+      list.querySelectorAll('.agenda-cell[aria-pressed="true"]').forEach((item) => item.setAttribute("aria-pressed", "false"));
+      if (cell && cell.matches(".agenda-cell")) cell.blur();
     };
     expand.addEventListener("transitionend", finish, { once: true });
     window.setTimeout(finish, 700);
