@@ -494,6 +494,7 @@
     resizeFrame = requestFrame(() => {
       calibrateTitleSize();
       buildSubmissionMarquee();
+      pinColophonFooter();
     });
   }
 
@@ -1307,6 +1308,40 @@
     });
   }
   window.addEventListener("resize", updateScrollEnds);
+
+  // Il colophon ha i crediti in fondo alla scheda. Con "margin-top: auto" restavano
+  // incollati al bordo basso mentre la scheda si apriva o si chiudeva, invece di
+  // muoversi con lei come il testo delle altre schede. Qui la distanza dall'alto si
+  // fissa su quella della scheda aperta: i crediti stanno fermi rispetto al titolo
+  // e la scheda li scopre o li copre.
+  function pinColophonFooter() {
+    const footer = colophonPanel && colophonPanel.querySelector(":scope > .panel-content");
+    if (!footer || panelAnimationFrame || panelDrag) return;
+    const index = panels.indexOf(colophonPanel);
+    const active = deck.dataset.active;
+    const inlineRows = deck.style.gridTemplateRows;
+    const inlineTransition = deck.style.transition;
+    // Senza transizione, altrimenti la misura restituisce le righe di partenza.
+    deck.style.transition = "none";
+    deck.style.gridTemplateRows = "";
+    deck.dataset.active = "colophon";
+    if (typeof setCollapsedAbove === "function") setCollapsedAbove("colophon");
+    const openHeight = parseRows(getComputedStyle(deck).gridTemplateRows)[index];
+    deck.dataset.active = active;
+    if (typeof setCollapsedAbove === "function") setCollapsedAbove(active);
+    deck.style.gridTemplateRows = inlineRows;
+    deck.getBoundingClientRect();
+    deck.style.transition = inlineTransition;
+    footer.style.marginTop = "0px";
+    let above = 0;
+    for (const child of colophonPanel.children) {
+      if (child === footer) break;
+      if (getComputedStyle(child).position !== "absolute") above += child.offsetHeight;
+    }
+    footer.style.marginTop = `${Math.max(0, openHeight - above - footer.offsetHeight)}px`;
+  }
+  window.addEventListener("resize", () => requestFrame(pinColophonFooter));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestFrame(pinColophonFooter));
 
   window.addEventListener("resize", scheduleTitleCalibration);
   window.addEventListener("resize", scheduleBouncingLogoBounds);
