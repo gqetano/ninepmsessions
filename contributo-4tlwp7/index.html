@@ -11,32 +11,39 @@
     <link rel="icon" type="image/png" href="../assets/favicon.png?v=3" sizes="512x512">
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=3" sizes="any">
     <link rel="stylesheet" href="../styles.css?v=scroll-20261121-1">
+    <link rel="stylesheet" href="../agenda.css?v=agenda-20261122-8">
     <style>
       /* Side B: stesso meccanismo del sito (styles.css + script.js), sezioni e colori propri. */
       /* Home nell'arancione del sito; le altre sezioni in scala di grigi. */
       .side-b {
         --contributo-row: calc(var(--closed-row) + var(--contributo-banner-height, 0px));
         --location-row: calc(var(--closed-row) + var(--location-banner-height, 0px));
+        --agenda-row: calc(var(--closed-row) + var(--agenda-banner-height, 0px));
         --liberatorie-row: calc(var(--closed-row) + var(--liberatorie-banner-height, 0px));
         grid-template-rows:
           var(--home-row)
           var(--contributo-row)
           var(--location-row)
+          var(--agenda-row)
           var(--liberatorie-row);
       }
       .side-b[data-active="contributo"] { --contributo-row: 1fr; }
       .side-b[data-active="location"] { --location-row: 1fr; }
+      .side-b[data-active="agenda"] { --agenda-row: 1fr; }
       .side-b[data-active="liberatorie"] { --liberatorie-row: 1fr; }
       .side-b [data-panel="home"] { --panel-color: var(--home); }
       .side-b [data-panel="contributo"] { --panel-color: #d4d4d4; }
       .side-b [data-panel="location"] { --panel-color: #bdbdbd; }
-      .side-b [data-panel="liberatorie"] { --panel-color: #a6a6a6; }
+      .side-b [data-panel="agenda"] { --panel-color: #a6a6a6; }
+      .side-b [data-panel="liberatorie"] { --panel-color: #8f8f8f; }
       .side-b:not([data-panel-drag]):not([data-active="contributo"]):has([data-panel="contributo"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --contributo-row: calc(var(--peek-row) + var(--contributo-banner-height, 0px)); }
       .side-b:not([data-panel-drag]):not([data-active="location"]):has([data-panel="location"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --location-row: calc(var(--peek-row) + var(--location-banner-height, 0px)); }
+      .side-b:not([data-panel-drag]):not([data-active="agenda"]):has([data-panel="agenda"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --agenda-row: calc(var(--peek-row) + var(--agenda-banner-height, 0px)); }
       .side-b:not([data-panel-drag]):not([data-active="liberatorie"]):has([data-panel="liberatorie"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --liberatorie-row: calc(var(--peek-row) + var(--liberatorie-banner-height, 0px)); }
       @media (hover: hover) {
         .side-b:not([data-panel-drag]):not([data-active="contributo"]):has([data-panel="contributo"]:not([data-peek-dismissed]):hover) { --contributo-row: calc(var(--peek-row) + var(--contributo-banner-height, 0px)); }
         .side-b:not([data-panel-drag]):not([data-active="location"]):has([data-panel="location"]:not([data-peek-dismissed]):hover) { --location-row: calc(var(--peek-row) + var(--location-banner-height, 0px)); }
+        .side-b:not([data-panel-drag]):not([data-active="agenda"]):has([data-panel="agenda"]:not([data-peek-dismissed]):hover) { --agenda-row: calc(var(--peek-row) + var(--agenda-banner-height, 0px)); }
         .side-b:not([data-panel-drag]):not([data-active="liberatorie"]):has([data-panel="liberatorie"]:not([data-peek-dismissed]):hover) { --liberatorie-row: calc(var(--peek-row) + var(--liberatorie-banner-height, 0px)); }
       }
 
@@ -81,6 +88,41 @@
         text-align: center;
       }
       .offer-photos img { width: 100%; height: 100%; object-fit: cover; border: 0; }
+      /* Link non valido o scaduto: come la home del sito, testata in alto e
+         testo nella colonna di destra. */
+      .side-b-gate {
+        position: fixed;
+        inset: 0;
+        overflow: auto;
+        background: var(--home);
+        color: var(--black);
+      }
+      .side-b-gate[hidden] { display: none; }
+      .side-b-gate-title {
+        margin: 0;
+        padding: var(--title-margin) var(--title-margin) var(--title-padding-bottom);
+        font-size: var(--label-size);
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        line-height: var(--title-line-height);
+        white-space: nowrap;
+      }
+      .side-b-gate-content {
+        display: grid;
+        grid-template-columns: minmax(0, var(--split-left)) minmax(0, var(--split-right));
+        column-gap: var(--split-gap);
+        width: var(--content-width);
+        margin-top: max(0rem, calc(var(--content-top) - (var(--label-size) * var(--title-line-height)) - var(--title-margin) - var(--title-padding-bottom)));
+        margin-left: var(--content-left);
+        font-size: var(--content-font-size);
+        line-height: 0.98;
+      }
+      .side-b-gate-content p { grid-column: 2; margin: 0; }
+      .side-b-gate a { color: inherit; text-underline-offset: 0.15em; text-decoration-thickness: 1px; }
+      @media (max-width: 720px) {
+        .side-b-gate-content { grid-template-columns: 1fr; margin-left: 0.3rem; width: calc(100vw - 0.6rem); }
+        .side-b-gate-content p { grid-column: auto; }
+      }
       .panel-content a { color: inherit; text-underline-offset: 0.15em; text-decoration-thickness: 1px; }
 
       @media (max-width: 720px) {
@@ -90,115 +132,61 @@
     </style>
   </head>
   <body>
-    <main class="deck side-b" data-logo-game-enabled="false" data-scroll-navigation="experimental" data-active="home" aria-label="Side B: navigazione a schede">
-      <section data-panel="home">
-        <h1 class="panel-title">
-          <button type="button" aria-expanded="true" aria-controls="content-home">
-            <span>NINEPM·SESSIONS</span>
-          </button>
-        </h1>
-        <div id="content-home" class="panel-content">
-          <div data-split-row="body">
-            <p>
-              Side B.<br><br>
-              Se sei qui, il tuo progetto è stato selezionato: questa è la
-              seconda parte del percorso. In queste pagine trovi quello che
-              serve per organizzare la sessione: il contributo, la nuova location
-              in cui registriamo e le liberatorie da firmare.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section data-panel="contributo">
-        <h2 class="panel-title">
-          <button type="button" aria-expanded="false" aria-controls="content-contributo">
-            <span>CONTRIBUTO</span>
-          </button>
-        </h2>
-        <div id="content-contributo" class="panel-content">
-          <div data-split-row="body">
-            <p>
-              9PM è un progetto completamente indipendente, e ci teniamo che
-              rimanga tale. Per questo chiediamo alle progettualità selezionate
-              un contributo che ci permette di coprire i costi vivi di
-              produzione.
-            </p>
-          </div>
-          <div data-split-row="ruled">
-            <p data-split-title>Pacchetto</p>
-            <article class="offer-package">
-              <h3><span>Sessione 9PM</span> <span>450 €</span></h3>
-              <p class="offer-small">Un pacchetto unico: il tuo brano, per intero, riarrangiato e registrato con il quartetto.</p>
-              <dl class="offer-list offer-small">
-                <div><dt>Arrangiamento</dt><dd>Originale per quartetto d’archi, sul brano intero</dd></div>
-                <div><dt>Durata</dt><dd>Brano intero</dd></div>
-                <div><dt>Instagram, post</dt><dd>Reel verticali (vari tagli)</dd></div>
-                <div><dt>Instagram, storie</dt><dd>Notice + Backstage</dd></div>
-                <div><dt>YouTube</dt><dd>Video integrale orizzontale</dd></div>
-                <div><dt>Riprese</dt><dd>Chrome Hub</dd></div>
-                <div><dt>Suono</dt><dd>Studio professionale dedicato</dd></div>
-              </dl>
-              <div class="offer-notes offer-small">
-                <p>Notice: la storia pubblicata il giorno prima dell’uscita.</p>
-                <p>Backstage: la storia pubblicata il giorno dopo l’uscita.</p>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section data-panel="location">
-        <h2 class="panel-title">
-          <button type="button" aria-expanded="false" aria-controls="content-location">
-            <span>LOCATION</span>
-          </button>
-        </h2>
-        <div id="content-location" class="panel-content">
-          <div data-split-row="body">
-            <p>
-              Per la terza stagione registriamo in un nuovo spazio, Spazio
-              Liminali, con il supporto di due studi professionali: Chrome Hub
-              per le riprese e uno studio dedicato per il suono.
-            </p>
-          </div>
-          <div data-split-row="ruled">
-            <p data-split-title>Foto</p>
-            <div class="offer-photos offer-small">
-              <p>Foto in arrivo</p>
-              <p>Foto in arrivo</p>
-              <p>Foto in arrivo</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section data-panel="liberatorie">
-        <h2 class="panel-title">
-          <button type="button" aria-expanded="false" aria-controls="content-liberatorie">
-            <span>LIBERATORIE</span>
-          </button>
-        </h2>
-        <div id="content-liberatorie" class="panel-content">
-          <div data-split-row="body">
-            <p>
-              Prima della sessione ti chiederemo di firmare alcune
-              liberatorie. Qui troverai i documenti da scaricare, firmare e
-              rimandarci.
-            </p>
-          </div>
-          <div data-split-row="ruled">
-            <p data-split-title>Documenti</p>
-            <ul class="offer-list offer-small" style="grid-column: 2;">
-              <li><span>Diritti d’immagine</span><span class="offer-muted">PDF in arrivo</span></li>
-              <li><span>Diritti sul brano</span><span class="offer-muted">PDF in arrivo</span></li>
-            </ul>
-          </div>
-        </div>
-      </section>
+    <!-- Il contenuto del Side B è cifrato (tools/side-b.mjs): si apre solo con la
+         chiave nel link (#chiave) e fino alla scadenza. Altrimenti resta questo avviso. -->
+    <main class="side-b-gate" data-side-b-gate hidden>
+      <h1 class="side-b-gate-title">NINEPM·SESSIONS</h1>
+      <div class="side-b-gate-content">
+        <p>
+          Questo link è scaduto. Scrivici per riceverne uno nuovo:
+          <a href="mailto:9pmsessions@gmail.com">9pmsessions@gmail.com</a>
+        </p>
+      </div>
     </main>
+    <!-- side-b:payload -->
+    <script type="application/octet-stream" id="side-b-payload">2dQULbThvihWyz6M.4VnqwN1Ho4yY6GN0h6-p_uBQZdRpMTluKHxZEjYjrPk4WAkqzMCCp5Ljje0ULeJTyvYawuKtlQm09J6TLGSaH-Z-YRY3VAb1j3bL7v85XDA1BtHL_yZGrt0yd6Rwr0Zz_IFFBPPUaIFpim6KcwdvAdc1t0X_vLZuRYjx9morl3Ll20dVNb2NOYPOvYjgu6C_BepHEY2SuE6L1qcsMzFVwqP6DH2xOILUWFTYMfwU-8D70LNurKxGA4MjG4re5zv6GV-Yt3AwnpauCWJITdV_pdF_ZWi4TpJXBrehgvke3NaHSwOCKRePMizTJWLw2O-VqsDhM01OHguGIl9dzeILdcJd4zsNB7JWQ2j_1g1d51NItCTo3jOYHsYAqyv0Mkfj7NcqA_QrSWqZdsbw961InM4vRIqe4oe00CIAESY3vFmWJDWZ1M-WJTshFdDeoGTDc8-BK1exE9l6M68brBj1DKMi5Yo6YNPbtpyDrc-gszAh0QN_G0P-B88VNTFQ5mASDyiDtltxYl--uBXQZ6YZlfHqNb-iFEr2jWgqhv8GqkB-NcP59fivQA1LoN6j-Ldc65hgkSyzFriiyIgR3cMyACIMTIIUkZNqa0E41TmQ0FWQ0MUpa_QsltoQhKhfpFGwrL7dyXko2frPvdVaVO2XY8hsa4GotWOytcws7zROGdI_fs-63FLuPMX-Al0iVcbwxu07M1DcxlIZVtnoj1j5XaFE-AoLRcjhKxu-N1m3stkpZLvxU7k-JIFmRaCMHWVcYP-IdjLV_Q68v0DD1RqlByuhR-JBXitMmEIhyZglZk7jAXLs1utb1bLuzGaj9SK3S-PruBZNFvv2D0DKt51qlNbEyOS06GZz7XG2H5_tzKNEpG7lsuzd7JB5DOqUK5vdC_wDBA4CtBttLrCg8HmB78pwbKeZaPlr3eHFAiWQ6zGuR5wHUINbHObPWGepLn-z0MfH87aNVowbYWkhKsCphZI26fmvA5mPm4M1C0rQBOS9BPx3dIzwkcpDQtO2Fjs7RYQWzusw2URHDNJGcatteQnDbSt4rFMejvKv_lm3HZZqU26ZeTs45-QeIHwOJhnzkXTFHsGbDTU9EcW_Rw6ETKiQbKXICxuXygxhl_ILTnxNrWAWoXsxKiPcvMf5hqguY6pKdXSytEgi2mEMSWjFh-OUgSHQqDoL3Kl9sb_kgmsyBvIJV2SBfrkKTaJq4gWYw6NRcw8by3Fl_tagUXTZ4PXjC8cTN6NYpxIc13Jwox1pfww3ytuJTOsK_noJK49UjOkK1dl-L0zUe0YLa7l0hakDY-WIZxCrbmn9l0PflZh0CAIyfnNoljyKfLy_O6umoQG7r40E-ktBTYIFmNZxztk7Wlek6NaybQlLvcTQ5CaviuS7A9mcoYda5qIGotH-Upb5Auy--FTl3ODwa2oQCx00yphCTmL0CerBsUcaYWZMj8Jr8bMaClnxbNpBUeVf6onmuNMOIaZ9cEKuG9IgiB7B93nuz2vMFMp6kK2O6AJD_9h3FOBtCIfdX1aUyl4BhBz8GXpSUVpA3xUD_3xnpQKlqMb5x3q0i5VXJquPoTfafVOFk5y5CFjvRNboNKldnqSlqDfhExfBmj_rynb77VXk-qjS-gIuOjRHxF2pFjfXWJKJXssh3Kgg8SKSYWnwB8SUO-yoHF8wmkNaBsMMu58kad_sHD_vUDs0UAD6RcmOQ2CH3ksLgJBWY7UKrAKMLPWU4XZDVcJwbahu3hfq2_yi0KPtNHjC5AynywwEh_k4fP-LebpjYfq4b-sQrVXAtvhfnPvh9F0zgkqu1-T2PMoi1rtKzXF_0nrZvIbviMMumqienw_qTUJYTO4S5fvdoOsI5mSpBDdjk2PH0y0iyMLifHae6wPzlM7oW7nF8w3dIksSVPmgoNHMci8ptb9_oIA1UMOotfvKrlkGXHMdrcyoAg3sqF9BOfasxWvjUFE1qgs73oHvImhnM0CcecEWiGwLdXjWzCZ-PRrP3iNyW16P7zMpdwwdoeAYsASU8iqDOaIKr7ySTNs8IlmSTAUmvKEfDHv3_IG7hty8MVfZPwZrMo0-VXeWdAc-Nv0aATsluUUKpP6eTPErkusm7Rw6ZqLkoo5vz9f3_Epn_Um2iMeBD3U2nvMJOyQDw3Z_Wd_1ajlKSrBLl-rqjPLu00_RFXzD6NI1zIpyBIUYU1vexEXKTQE6xG5o3_5QkuiNMYaJ8Es7LoIm77hjvukwoMvdT74ifsFiJdatJCGBhMuUT8wJN5txt_aWD92d52RYq3XkhrCmPenZfnmQmVlC5HWbYWkDP09wkJOQs2qVhbxrfA8WpYnXAXOf-WATkRUpcJNNYGFoUhtDIC9oLcUjdlaSz2Esde97WIcUyyzsYazZo0AGnPFlrGMbY4d30gvi7kJXST0mvvtMli3amwnbe_H34lr9SLQBLkSCDwPiCXQFyU1GdREVhoyzhmWDJvRxHs81qRedX1ThCRIhfz5y24Ba9Xkcv0PLpeQCde2sPEqy_K6J8ozQpjOfcXyVGnCr9R9nlzC7_ZsAbsq7nx-XK7i6P7ck_Yk3_XShAPOY7n_4YUKqZvycHxqbOq7yCVffNG-0aqDMT1XTFiu6cyDs4izhqEOde_m8KoHY7qo6FjRSwSUzE4J0AYgFlu7XYFwXFj4K9jFcuv7dkN1xUXvF6GNsdJh_yIssRDBfSYy1nFRtYEdalAu5S2roBAabahGT8V6lbskD2zOHpuesm5Vl74XYdsi-TcqtdDaCWOQMMh95c5HB_nflf792GEAljKzUSVRUBsznq9t1YFzEaymtAGNjfdA5B9YHYKrt0k2erMO5M_d4qwvniSXPbQLfz9Hj-z7-uR3w98bm8otLu29pkgum8QZZlOA3B8dDJ_LhEOsb_FkQUacQX-F-qo5uI616OuVt5nRqvQICYMt6Q1cOOhFshGQGAq7EtnL6SbDbxmHtooRJhV9PV1cFszw6MFdR7PaatPssgl4BGHNcf7hED2Vqs5rDw73ai3Go-DkUxkpKukhUmFoOo1RMcnVQmQeDCpRbN7sMYbpr-OP2mpR9yG4bkep566eW7QO-6VLgJVr_P003k0P4Lv6y7KUFukvvG4Hrgq5pt6bA-ZtuP594Flg_rU5eLGJozVciexMpKkCEwzH15CRK2YpYTITY1R_5jjeCES5mgibDQm-qJSgD7uamXrCgWZq4vyZX6WPPrMBmsa0FSoCUR_TK2I2eLJarkDIuczgVvvQZrTGjCM9AweL3-QDNY9DgKGAnercEYmf9ju72iZUJb2x964hMAlwjTVlei_CoxUipP18LLI8W-sD_ANlJtifLrWHdS87Gd7Imho1khsi8-nN-y1wSgt2cZ-20r3V7opuAl0ImeDJNoedBpDAD8rycIOWwD7Zcmrmhv8kRx4OgI3Kc5R2fv4-qEZWJ_BWBuMTrEZ1KA_lC2dZ9ca_E2GElF1c9UJP_3PJE3tczveecW5OAWjvmki44xAe0F56Q9e9MYYH0qr4hMIwbEgPFOdUQXK4gY5bEDlfY30bduBozb1WfCGjW57_Kd38g64IZ80lQu-Uym2oKsnOcr0cCumXf12JryIZT8-an7QrKMuAYbcT0PmaYDydUEqbPOrefcnM43rbC2hxvbbtAUMnR9HsPhqkAapPE2yszk3rxa6a1xWCkbHdNFunH4pmU3uQIqPAevWfggp71noN7LxbK9pi03FYGqpR-mpE-D_VBy9VsZW4tKeH314bacQMkx3v-BQkl2_0QtA6qxc8jRjDGb8XeRtx7479PF4ZgF7fjAf98ts3zLDJdM4UtWHntBKMYcAGARq3q9OZkNlZmbshbD8SKslIKUcXhAnuXn9GhOsbmvnE-Cg5aOcLVCe7WOfZkIingwnhOtaRoK6P5HRXkXxHqapQsEwjW1tTF0ebmxMz-XAUQzgkWCfV403UlUwlT-KM_EGZy5AEeW8r8V1CGvlINH0-8xcSllWml5xqp4pzRvhy1TYIkPaiYJNw-rdgDfn-mNeto3NGW29EpoPo_eRKK4UfetPW9cQSsh2mU--OkXo1KukokGM0BbuTZw1OFMEC_axkhqwMZUHkhbrNsq5CMGG_Vo7HcqnnHfq24bbcdG4dBGBB9l0ul4Qz4kNDNhrQ_-FRr-BQ6CGqsp0mZQizKjpyWb2Yc4Z3mpFC5OdtUHX6_vqTuhFhPAg9_uNjMKTUqwoy-fGKw9kPK6xxo8dNZLgYbviqIPfBlN1I30WnvX5XCg47ImOc8RkgREe_85udd2J0mE0Uoj7h9nPkurGO3GAr_jLMI4op1cZ_0XgOyjfnLGjesrAxkBFbcBIpR4lkmY8_SX-fgVHWDccEQaR-J-NUuSYoaVo0uF7tBAgy0x4oind0qLUEkm8m7R-SPFeGRSSMsqjjVh9ZUjDxUQ7aTSFvi_hnGyVIXd3370JAnNB01R-jf-4YkxqHYh7qQcseaCGEKwnSuHhl2GmSz1sbPBVPEzVpy3g40uAMRHnW6TyjiXey_2opChjVQ3NY7t52d8mApoJCrCBILvxtaeho4C-h5WUekwbFhmuK3Mwh8loc-MXq0QO0RMYOZuOQBDAfmiQa7poFePNfdrj2zfia-72MNnkKBaGN_uqrSAE77tzJlUFd29OMgBLZt6vZSf2PCDIcLDCZYwXVPQY7LGylHxrHYlGkA6yOuMRN83Amm9JxtR7T5qwvYd6ybKVzNDetK4iVp_hmW2rAna4HnyaNRQmqPuxIIF1QwQNAnGzsP2PcHAf5Zqw4e0bXiJae2sLrUjfI1XKNuIXOoRErC0fqBNMeCGMzRRxrgiZmO5-rZKC1SxNG3vPrMaDPIDS2O6Hk8boJSEjAW8cnFtwCqdINCGeypVhV8fWxpLljyGXB-fpKg0wIUTpFltPXTl2ZnSJeAg4UIeXZoVC5xuxdRRsI7v7imLlDSFBMGRJ3qxYqLvhseT7lqoCcca2i9WWWnSttOISJ_vIBU9b9Um_wl1HFzd5GtFqgAlc22R5IoQgX3Ggb-2ZSMuzFT5NDzce6yTrriEww5BQxnKE59dc5dGQURWxVdaUe6thE_4dUJWLQfDVRlprBHFaPlaPi0YDwhHCecJ-o80iqcQ3F2-doT0U2RB0oJ_7QGeSA_YkwxfTgjlol0BL3pOhXXwgAJhDcjniXPd6zKnfuw6aCjdvug1_WI3AiuC66KbnVojyCEyUdCormNsxolEYCnQQb1MqVvBg-qc8sIoLCVNGDRP_1awiIJBgZNcCE_4rqUpCjGVW0FM5wvgSgYDvaoaA8j5NpDvhCa1iytuPaziQ0LrFja-Ge4YXwhrdYJ6bc4ovQ18nfyE301PvlAgf232TfFNAdSDxcjsYrWruxr5gbi2JWotqtcibXbjN9T0BzGFNB_9FoY58Wpi2RD5cEDmLmIn8RpMGzTnOBCS2L16jW6vfCQkNtB0_Qhp70jqjPiHdjHotBL_tP-B0B_9tqPGMKrsDWy-mp7x7NJWeFnUUHifC6YLhSsY0D7WDR8jejh8-tvjOhEjhHVuw0FPPu_jJUDwR5_2xmvALs0QBzSyww-uF-O-XJIgsXHQiYcREsiMoYN6I_VuMM0achFbjLwiQWndlwUjeXYo4hRuzBbOTFyoIAaSoLm0DCmjBU3nc-H1JKG7vwIuNEfraEE0jk1VhOETDY2WJWtw8DAOrt5xieCx7bIR26_ZefZaMU7uhtm3r3PQOHp02Jrr0_8fmFuVs8sdkDdCy_Jo-fqEPGuXPbGJeKELXGGJd0YhEOwJvU_M0i0E2LNqqmgFmWCr_QYIXEwt62yT1BCPU_-SA1NG1Jio3xHleKCb2LhaUXgApz7DqXPKweqgzlnzDlYbU6bTA-e26kbyzeS8nB7YqImZ1s52TCRJl_bRVNuorCXZ2pnwlg_2nNOYp44qAyNvym2E1RjJaCSV-n321X_T-i3m_tBxmE9GM5BO9JVkELRVNkMU6lYcmuO5d8W6LdPR05JsWLF5IW__sRBG1t4r1MDBZgbiRIBkUMps4_TebggqKMxAJETuIQDGDezySd57ElH5MN_UNJQNlbrCCyzDjPWpedmnMZ6Vni_fen4K6dqC88N_GxKb6WEDxqOqESGp5XsXMaYeO0ii2IIpNnAkdlx6OxRb0xrtAZ2Js8BQVfrS7irxzMx7mbCgOTHlwvk4svJw9ouD3lM3OnW_Ge9nhLUjtgBQ22pk2LYqZD6xHQtiEvIFj7z8-XRGfncm-GA0oR3LXgCMTgyyu2gQq56C7TAGu9Ypn3_sHQc7rc1soqoIbS83OGzATQllLdJH1IDRY_5goNshZXqTJRbaaYFbBJsi9ym8OtDB_ym1Enl5Auh0oL7aG5cYMqnxR54BY7QLtA0xjQMk_iD7X-iq6qV-b95wdFoIe2bFY1CpFJl9elq-MYSTp8Z8z_iuxPuSZgfKiCSrzDBHy5PcysAv6J7c6MRRKhORwehch2TM9XRYZy5HqSa0ZjxUVUfh9NbOXO2qcnZYK-HPETJBATb8MmgWEk6JZgbMIBqJxslheBiPrhN0YHaH-3-RPjImA4gZFvWf2TvxrflMwdBatt3LXZbxZhwkOMUCaj56a_n5hjFaBoTHQKWDw9WMol25vcq6ijpFtY5gzhGETx2x-xaBzaitJMkHzTkepwpXWCMVnETYF5WBTH0zieTKPZqdiwhL_RBo39QX2HCJBIGSzZa0_iw4ROdqze83XtYyhqHcHE6qAvltcBO8e6z4eREupdoqvBjKdQAE-5grLZCGqn8tqxXogD4tIp0Zvj8ft_QBVlYRnvA5KDS0FhHDaNpoV1Ba3NReROJ0gusyVO2tJdbl4fjVSth8WejBM9dOTnxM5zwml2fgE0Mta8DpKc7i9KnJL7ypdSwUtEE19lLK2SUuRNQwN0pu24UWXc5VhdSHwuR3i3l_6ts1skW-0NiahYI0nLINlO5Hho3PG9X4WdrHuyh-80XzvAjPHedye3UolfRjzCXEvBoM4bTCdKqYziBTkGpCYw-zuvWtjYikR1oMoNExrszXmxcNE-E99YSUb3OXYuqOlD6Sy9sCz_XnQTvEGfSghjYBkPxBwAUKl0ApEjPKztXHcmmU456W-RlMF3Tki9-ISdN4MunDUZMWNmG8SePqIBzCPl5CQ-J2Dy9a1jwyG9BWY2JsjIGH57GTIDu4ZNA5fQuBrZyoVV7HeaJLVOJPG-qvnUY83uBd9_9eW8GwsDU0GlCBE8zVdKCJwnRapw9-wxyt0ZlxUu17d8gcnwVL_h-cK66AQOuipbtzFRvYuo9LADFZ8__NPjChJa4vwF4fZVEU_5zEo7B81fpSpu2ch8CdYDKJZriOvi-TyB5zVI84nnE7ffPpvxp0dWwP6Hf9GQXO8E3-LRX4fORk4rWI__BStFJfbHNcNPl6HhxXvhOW6mukhBmLuA0pOYR8yCrEv-7TztEgn6uquZMhwt94LnBrPiFdoLEZtyhhrSriOvH9RIzGckbbzFNonupDaEdVlrc0CD2s4shvXmUSwBVGw5jQjsPNfQlP3Zjj4bwAakxiMaMES9qjKGWSQFxNFqZ0erumtMhMhG9c6RSdqbAknW1EVCAKLMy5YgcGFxqPDcqbKoS8KUZgNIsFwG1zuoHmprKZRr3Mo7J23MgGfp5DvMLUy92xsnV7l3S_D9rD2ggyUsxK3YEmHpKzbKD7HXRrphutbrM3w7GP3USAdOSIlxWKNFJII3d7dtg6XMjPikHaTenZG5b7TW_vnUghfqn3ow1sjVncgx9NnUYvpMavz9KVS5fCnJsxXGi0i6LF0U64wNR9WXy6I8oV_FEdxhrZgU6rMH6jnTBZT6NBqk_ONWruS_pZ2MutlBMr4q0KzXLEXZNt-SVU9--onwSB2SonV2LBs6tSvLbfbVjH2oLXjR-ACkHOgUMqgWB7Lv6fr2gvQNjQIQmhrLnb9SfsvggM7qpbAkd2MTn7NUYSYD5Hn9RGMIU84nKFllwJli_sajimJDabHsrdh-odf326L_baz2mwVEa0iMfbp2ziKzvgZACNKWk89IDty7_SLmmvB-aRWvB4J5xcgAqu2wBL-w4k_2VtRYIWMWDma_oOcsLdnyT4nsMXG_Lo2hfermuvx7Px6rwtMJnVEAb5VTmBZ-3CsSXBlDDUdUImGziJxPKSj7qoAaIecZf3rBzNT5Y_Hd5eEeWF61Aw3nwl_6RYTWc2X0H4_ARTmgWsv0YLb8AVTUQcbhLmMIU2d2KdnfehOA6GbhnXNhjvr_EytMxY7YkgGfPLBVJ5o5pAO-Yhn-BVSZX3bt_Z2l9DaPwi_quQUi3oIp9lCdXA1O0rpus_G-lI56Ssv_vonxPNhi2L-hsawGNDdzCNchlXXy5_rCStQ63mITZ-lHUWLPMbcSK779rOsQ4SEiYmY1DNzQTst_frVK_OnvLosyTj7IaCP7eFH8y4PYfhLIGOkAV8ZSM4tUyepIKNgZ7bT1pgemlTcqykfM2Mhd8KNFmEsP1G1S605qZWgRi4f60E19hhpP_UcMtu1l2yyNUtjdom7B-wqEz4CJrmED25luFknlSEAEXMJAMOxt6s834IIpOk-95G1f0WH6_PDhF1vhuOzE815v5Omd6DqIhHvpY0KCnnRgqToEIj1t8kPSUWorAZ6zbSBVsuN8UOaml9V98_tm_HvfmZQpiu9Fw0rmba_kyN8JRioRcsblXjcPYJVR5tV54TQoYqSqWIgAgm3kGqc7u81RBMO7XxmXuQq37HL5ABJEVW3a1gBxpC5EOWBgZwutp0h85cvMBVG3UNOnOhgrJ2gqQ_eD37VV2SWpJB-zP0MNoIzvXjxCCixLFGDhEyK5IRxnGjW3-mxEdzQFG2BZSIU0GdXK9L_fcq_EoVuOgv-9nViE3OZrF12_QM5owmLh4n7B5SCmEmRlRsJK-jSq0ylEFMK6CbmNUsBLJ_9MXYA8W8coOPqsHIlbR9E6ho3zwgVBkME9Bo0Ax8uNm9LHZUdb9MCXkfY1e3C_BEnbz1A5XIjlTx5RrnFe2fkNhAIDOo2OtklqOJehx1_VHBY8387Z1N08Xc0bMAg4C1QG5ZAHxwMd5LDCtNldANFRE9Qylw4kZItZw7Cq1Yn-O4WJcZYO2yKIbbDqa-0bBrl8LZcQ_jgfIIrAo6fSYXpIs4Cikouvis5mSp40hwH0yKq-kUpya_8tYAFauh5qX</script>
+    <!-- /side-b:payload -->
 
-    <script src="../script.js?v=bounce-20261121-2"></script>
+    <script>
+      (async function () {
+        const gate = document.querySelector("[data-side-b-gate]");
+        const closed = () => { gate.hidden = false; };
+        const bytes = (text) => Uint8Array.from(atob(text.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+        const load = (src) => new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = src;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.body.append(script);
+        });
+        try {
+          const key = location.hash.slice(1);
+          const block = document.getElementById("side-b-payload");
+          if (!/^[0-9a-f]{64}$/i.test(key) || !block || !window.crypto || !crypto.subtle) return closed();
+          const [iv, data] = block.textContent.trim().split(".").map(bytes);
+          const raw = Uint8Array.from(key.match(/../g), (pair) => parseInt(pair, 16));
+          const cryptoKey = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
+          const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, cryptoKey, data);
+          const payload = JSON.parse(new TextDecoder().decode(plain));
+          const today = new Date();
+          const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+          if (todayKey > payload.expires) return closed();
+          const template = document.createElement("template");
+          template.innerHTML = payload.html;
+          // Gli script dentro il contenuto vanno ricreati per essere eseguiti.
+          template.content.querySelectorAll("script").forEach((old) => {
+            const fresh = document.createElement("script");
+            fresh.textContent = old.textContent;
+            old.replaceWith(fresh);
+          });
+          gate.replaceWith(template.content);
+          await load("../script.js?v=bounce-20261121-2");
+          await load("../agenda.js?v=agenda-20261122-8");
+        } catch (error) {
+          closed();
+        }
+      })();
+    </script>
     <script data-goatcounter="https://9pmsessions.goatcounter.com/count"
             async src="https://gc.zgo.at/count.js"></script>
   </body>
