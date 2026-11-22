@@ -675,11 +675,17 @@ button {
   color: var(--black);
 }
 .deck > [data-panel="colophon"] > .panel-title { flex: 0 0 auto; }
+/* Get in touch parte come il testo delle altre schede; loghi e crediti stanno in fondo
+   (l'altezza minima la fissa script.js, così si muovono con la scheda). */
 #content-colophon {
+  display: flex;
   flex: 0 0 auto;
+  flex-direction: column;
+  padding-bottom: 0.75rem;
+}
+#content-colophon > .site-footer {
   margin-top: auto;
   padding-top: clamp(2rem, 4vw, 4rem);
-  padding-bottom: 0.75rem;
 }
 
 @media (hover: hover) {

@@ -224,7 +224,7 @@
   const scrollBars = new Map();
   panels.forEach((panel) => {
     const tab = panel.querySelector(":scope > .panel-title > button");
-    if (panel.dataset.panel === "colophon" || !tab) return;
+    if (!tab) return;
     const bar = document.createElement("div");
     bar.className = "scroll-bar";
     bar.setAttribute("aria-hidden", "true");
@@ -971,14 +971,13 @@
   }
   window.addEventListener("resize", updateScrollEnds);
 
-  // Il colophon ha i crediti in fondo alla scheda. Con "margin-top: auto" restavano
-  // incollati al bordo basso mentre la scheda si apriva o si chiudeva, invece di
-  // muoversi con lei come il testo delle altre schede. Qui la distanza dall'alto si
-  // fissa su quella della scheda aperta: i crediti stanno fermi rispetto al titolo
-  // e la scheda li scopre o li copre.
+  // Nel colophon Get in touch parte come il testo delle altre schede e loghi e crediti
+  // stanno in fondo. L'altezza minima del contenuto si fissa su quella della scheda
+  // aperta: durante l'apertura e la chiusura tutto si muove insieme al titolo, invece
+  // di restare incollato al bordo basso.
   function pinColophonFooter() {
-    const footer = colophonPanel && colophonPanel.querySelector(":scope > .panel-content");
-    if (!footer || panelAnimationFrame || panelDrag) return;
+    const content = colophonPanel && colophonPanel.querySelector(":scope > .panel-content");
+    if (!content || panelAnimationFrame || panelDrag) return;
     const index = panels.indexOf(colophonPanel);
     const active = deck.dataset.active;
     const inlineRows = deck.style.gridTemplateRows;
@@ -994,13 +993,12 @@
     deck.style.gridTemplateRows = inlineRows;
     deck.getBoundingClientRect();
     deck.style.transition = inlineTransition;
-    footer.style.marginTop = "0px";
-    let above = 0;
+    let above = parseFloat(getComputedStyle(content).marginTop) || 0;
     for (const child of colophonPanel.children) {
-      if (child === footer) break;
+      if (child === content) break;
       if (getComputedStyle(child).position !== "absolute") above += child.offsetHeight;
     }
-    footer.style.marginTop = `${Math.max(0, openHeight - above - footer.offsetHeight)}px`;
+    content.style.minHeight = `${Math.max(0, openHeight - above)}px`;
   }
   window.addEventListener("resize", () => requestFrame(pinColophonFooter));
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestFrame(pinColophonFooter));
