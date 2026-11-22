@@ -208,6 +208,10 @@ button {
   overflow: hidden;
   overscroll-behavior: none;
   background: var(--panel-color);
+  /* Le altezze delle sezioni non sono sempre a pixel interi: tra una sezione e la
+     successiva poteva restare una riga sottile del fondo arancione. Il colore della
+     sezione scende di qualche pixel sotto la successiva e copre la fessura. */
+  box-shadow: 0 3px 0 0 var(--panel-color);
 }
 
 .deck > section:has(> .panel-title > button[aria-expanded="true"]) {
