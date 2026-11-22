@@ -92,14 +92,24 @@
     return fragment;
   }
 
+  // La fascia si ricostruisce solo se cambia la sua larghezza o la dimensione del
+  // testo (sul telefono "resize" arriva anche quando compare o sparisce la barra del
+  // browser). Ricostruendola, riprende dal punto in cui era: niente salto.
+  let marqueeBuiltFor = "";
   function buildSubmissionMarquee() {
     const marquee = document.querySelector("[data-marquee-text]");
     const track = marquee && marquee.firstElementChild;
 
-    if (!marquee || !track) {
+    if (!marquee || !track || !marquee.clientWidth) {
       return;
     }
 
+    const signature = `${marquee.clientWidth}|${getComputedStyle(marquee).fontSize}`;
+    if (signature === marqueeBuiltFor) return;
+    marqueeBuiltFor = signature;
+
+    const running = track.getAnimations ? track.getAnimations()[0] : null;
+    const elapsed = running ? running.currentTime : null;
     const text = marquee.dataset.marqueeText || "";
     const group = document.createElement("span");
 
@@ -109,7 +119,7 @@
 
     const minimumGroupWidth = marquee.clientWidth * 2;
 
-    while (group.scrollWidth < minimumGroupWidth) {
+    while (group.scrollWidth < minimumGroupWidth && group.childNodes.length < 400) {
       group.append(createMarqueePair(text));
     }
 
@@ -117,10 +127,13 @@
 
     clone.setAttribute("aria-hidden", "true");
     track.append(clone);
-    marquee.style.setProperty("--marquee-distance", `${group.scrollWidth}px`);
+    // Larghezza esatta (anche frazionaria): con un valore arrotondato il giro non chiude.
+    marquee.style.setProperty("--marquee-distance", `${group.getBoundingClientRect().width}px`);
     track.style.animation = "none";
     track.getBoundingClientRect();
     track.style.animation = "";
+    const restarted = track.getAnimations ? track.getAnimations()[0] : null;
+    if (restarted && elapsed != null) restarted.currentTime = elapsed;
   }
 
   function calibrateTitleSize() {
@@ -852,6 +865,8 @@
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => {
       calibrateTitleSize();
+      // Col font vero le parole cambiano larghezza: la fascia va rimisurata.
+      marqueeBuiltFor = "";
       buildSubmissionMarquee();
     });
   }

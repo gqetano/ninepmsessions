@@ -146,10 +146,11 @@ button {
   height: calc(100% + var(--submission-nudge-height, 0px));
   transform: translateY(calc(-1 * var(--submission-nudge-height, 0px)));
   overflow: hidden;
-  /* Il filetto anti-fessura qui finirebbe sopra il titolo del colophon. */
-  box-shadow: none;
   will-change: height, transform;
 }
+/* Il colophon resta sopra Submissions: copre il filetto anti-fessura (che altrimenti
+   finirebbe sul suo titolo come una barretta marrone) senza riaprire la fessura. */
+.deck[data-submission-nudge="true"] > [data-panel="colophon"] { z-index: 5; }
 .deck[data-submission-nudge="true"] #content-submissions { visibility: hidden; }
 
 .deck > section {
@@ -798,6 +799,9 @@ button {
   display: flex;
   align-items: center;
   color: var(--menu-ink);
+  /* Il riquadro del menu chiuso non deve fermare tocchi e scroll delle schede sotto:
+     ricevono i tocchi solo il tondo e, da aperto, l'elenco. */
+  pointer-events: none;
 }
 
 .site-menu-toggle {
@@ -814,6 +818,7 @@ button {
   border-radius: 50%;
   background: var(--black);
   cursor: pointer;
+  pointer-events: auto;
 }
 
 .site-menu-toggle > img {
