@@ -390,7 +390,6 @@ button {
 }
 
 [data-marquee-text] {
-  --marquee-distance: 0px;
   position: sticky;
   top: 0;
   flex-shrink: 0;
@@ -427,13 +426,16 @@ button {
   padding-right: 0.85em;
 }
 
+/* La traccia contiene due copie identiche del testo: spostarla di metà della sua
+   larghezza riporta esattamente al punto di partenza, quindi il giro non ha giunture.
+   Niente misure da JavaScript dentro l'animazione (Safari non le aggiorna). */
 @keyframes submission-marquee {
   from {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
 
   to {
-    transform: translateX(calc(-1 * var(--marquee-distance)));
+    transform: translate3d(-50%, 0, 0);
   }
 }
 

@@ -127,8 +127,6 @@
 
     clone.setAttribute("aria-hidden", "true");
     track.append(clone);
-    // Larghezza esatta (anche frazionaria): con un valore arrotondato il giro non chiude.
-    marquee.style.setProperty("--marquee-distance", `${group.getBoundingClientRect().width}px`);
     track.style.animation = "none";
     track.getBoundingClientRect();
     track.style.animation = "";
