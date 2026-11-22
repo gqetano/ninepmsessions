@@ -621,7 +621,18 @@
     overscroll.content.style.transform = Math.abs(shown) < 0.3 ? "" : `translateY(${(-shown).toFixed(2)}px)`;
   }
 
+  // Dopo il rimbalzo serve una pausa prima di poter passare alla sezione successiva:
+  // il ritorno del testo (e l'inerzia del trackpad) non deve valere come nuovo scroll.
+  const bounceQuiet = 450;
+  let overscrollSettledAt = -Infinity;
+
+  function bounceLocked(panel, now) {
+    if (overscroll.panel === panel && (overscroll.frame || Math.abs(overscroll.x) >= 0.3)) return true;
+    return now - overscrollSettledAt < bounceQuiet;
+  }
+
   function resetOverscroll() {
+    if (overscroll.panel && (overscroll.frame || Math.abs(overscroll.x) >= 0.3)) overscrollSettledAt = getTime();
     if (overscroll.frame) cancelFrame(overscroll.frame);
     overscroll.frame = 0;
     overscroll.x = overscroll.v = overscroll.drag = 0;
@@ -953,7 +964,7 @@
       return;
     }
     const direction = dy < 0 ? 1 : -1;
-    const next = adjacentPanel(touchNavigation, direction);
+    const next = bounceLocked(touchNavigation.panel, getTime()) ? null : adjacentPanel(touchNavigation, direction);
     if (!next) {
       const step = touchNavigation.lastY - event.touches[0].clientY;
       const panel = touchNavigation.panel;
@@ -1052,16 +1063,17 @@
     // Un nuovo swipe netto (delta che risale con decisione) è ammesso dopo 250ms dall'ultimo
     // movimento del testo, anche sopra l'inerzia del precedente.
     const movedAgo = now - lastContentScrollTime;
-    const settling = !gesture.next && (accelerating
+    const bouncing = !gesture.next && bounceLocked(panel, now);
+    const settling = bouncing || (!gesture.next && (accelerating
       ? movedAgo < 250
-      : Math.min(movedAgo, now - lastEdgePush) < edgeCooldown);
+      : Math.min(movedAgo, now - lastEdgePush) < edgeCooldown));
     const next = gesture.next || (settling ? null : adjacentPanel(gesture, Math.sign(delta)));
     if (!next) {
       const scrollBefore = panel.scrollTop;
       routePanelScroll(panel, delta);
       const moved = panel.scrollTop - scrollBefore;
       if (moved) lastContentScrollTime = now;
-      else if (settling && !accelerating) lastEdgePush = now;
+      else if (bouncing || (settling && !accelerating)) lastEdgePush = now;
       // Il testo è arrivato al bordo: un solo rimbalzo con la velocità che aveva.
       // L'inerzia che continua ad arrivare non lo prolunga; un nuovo gesto sì.
       const leftover = delta - moved;
