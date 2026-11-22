@@ -90,7 +90,7 @@
       cell.setAttribute("aria-label", `${dayNames[new Date(y, m - 1, d).getDay()]} ${d} ${monthNames[m - 1]}${year}, ${note.textContent}`);
       cell.addEventListener("click", () => openDay(key));
     }
-    cell.append(weekday, number, note);
+    cell.append(number, weekday, note);
     return cell;
   }
 

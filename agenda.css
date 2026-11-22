@@ -68,9 +68,10 @@
   padding-bottom: 0.35em;
 }
 
+/* Una data per riga, a tutta larghezza: la riga intera è il tasto che apre il giorno. */
 .agenda-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .agenda-weekdays {
@@ -90,31 +91,40 @@
 .agenda-cell {
   position: relative;
   scroll-margin-top: calc(var(--label-size) * 1.15 + 0.5rem);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "number weekday note";
+  align-items: end;
+  column-gap: clamp(1rem, 2.5vw, 2.5rem);
+  width: 100%;
   min-width: 0;
-  min-height: clamp(9rem, 17vw, 15rem);
-  padding: 0.35rem 0.4rem 0.45rem;
+  padding: 0.6rem 0.6rem 0.7rem;
   /* Filetti sempre neri, non del colore del testo: così una casella che diventa
      nera (aperta o sotto il mouse) non mostra mai una linea chiara. */
-  border-right: 1px solid var(--black);
   border-bottom: 1px solid var(--black);
   text-align: left;
 }
 
-.agenda-cell[data-last-column] {
-  border-right: 0;
+.agenda-weekday {
+  grid-area: weekday;
+  align-self: start;
+  padding-top: 0.3rem;
+  font-size: var(--content-font-size);
+  line-height: 1;
 }
 
-.agenda-weekday {
-  display: block;
-  margin-bottom: 0.4rem;
+.agenda-cell > .agenda-number {
+  grid-area: number;
+}
+
+.agenda-cell > .agenda-note {
+  grid-area: note;
+  padding-bottom: 0.2rem;
 }
 
 .agenda-number {
   display: block;
-  font-size: clamp(2rem, 7.4vw, 8.5rem);
+  font-size: clamp(4.5rem, 11vw, 12rem);
   font-weight: 500;
   letter-spacing: -0.045em;
   line-height: 0.8;
@@ -190,10 +200,7 @@ button.agenda-cell[aria-pressed="true"] {
 
 .agenda-expand-body {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, var(--split-left)) minmax(0, var(--split-right));
-  column-gap: var(--split-gap);
-  align-items: start;
+  display: block;
   padding: 0.9rem 0.6rem 1.1rem;
 }
 
@@ -205,10 +212,9 @@ button.agenda-cell[aria-pressed="true"] {
   text-transform: uppercase;
 }
 
-/* Giorno e mese sono già nella casella: nella fascia solo orari e prenotazione,
-   nella colonna di destra come il resto del testo. */
+/* Giorno e mese sono già nella riga: nella fascia solo orari e prenotazione,
+   a tutta larghezza. */
 .agenda-day-body {
-  grid-column: 2;
   min-width: 0;
 }
 
@@ -313,17 +319,17 @@ button.agenda-slot[aria-pressed="true"] {
     padding-left: 0.2rem;
   }
 
-  .agenda-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .agenda-cell {
-    min-height: 9.5rem;
-    padding: 0.35rem 0.4rem 0.45rem;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "number weekday"
+      "number note";
+    row-gap: 0.4rem;
+    padding: 0.45rem 0.4rem 0.5rem;
   }
 
   .agenda-number {
-    font-size: clamp(3.6rem, 20vw, 5rem);
+    font-size: clamp(4rem, 24vw, 6rem);
   }
 
   .agenda-expand-body {
