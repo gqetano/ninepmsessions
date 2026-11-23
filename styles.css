@@ -545,6 +545,36 @@ button {
   line-height: 1.2;
   text-align: right;
 }
+/* Domanda Sì/No: stessa riga e filetto dei campi, opzioni come testo. */
+.submission-choice-row {
+  padding: 0.15em 0 0;
+  line-height: 1.2;
+}
+.submission-choice-question {
+  flex: 1 1 auto;
+  min-width: 0;
+  opacity: var(--form-muted-opacity);
+}
+.submission-choice-row:has(input:checked) .submission-choice-question { opacity: 1; }
+.submission-choice-options { display: inline-flex; gap: 0.9em; }
+.submission-choice-options label { position: relative; cursor: pointer; }
+.submission-choice-options input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.submission-choice-options span { opacity: var(--form-muted-opacity); }
+.submission-choice-options input:checked + span {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.submission-choice-options input:focus-visible + span { outline: 2px solid currentColor; outline-offset: 3px; }
+#band-details[hidden],
 .submission-field-error[hidden],
 #second-song[hidden],
 .submission-notes-help[hidden] { display: none; }

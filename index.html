@@ -12,7 +12,7 @@
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico?v=3" sizes="16x16 32x32 48x48 64x64">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=3" sizes="512x512">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=3" sizes="any">
-    <link rel="stylesheet" href="styles.css?v=20261122-contatti">
+    <link rel="stylesheet" href="styles.css?v=20261123-accompagnatori">
   </head>
   <body>
     <main class="deck" data-stack-mode="collapse-above" data-scroll-navigation="experimental" data-active="home" aria-label="Navigazione principale a schede">
@@ -141,9 +141,20 @@
                   <label class="submission-sr-only" for="artist-links">Altri link</label>
                   <input id="artist-links" name="link_presskit" type="url" maxlength="2000" placeholder="Altri link">
                 </div>
+                <div id="band-choice" class="submission-field-row submission-choice-row" role="radiogroup" aria-labelledby="band-question" aria-required="true">
+                  <span id="band-question" class="submission-choice-question">Sarai accompagnato da altri musicisti?</span>
+                  <span class="submission-choice-options">
+                    <label><input type="radio" name="accompagnato" value="Sì"><span>Sì</span></label>
+                    <label><input type="radio" name="accompagnato" value="No"><span>No</span></label>
+                  </span>
+                </div>
+                <div id="band-details" hidden>
+                  <label class="submission-sr-only" for="band-members">Quanti saranno e cosa suoneranno? (max 4 musicisti)</label>
+                  <textarea id="band-members" name="accompagnatori" rows="1" maxlength="1000" placeholder="Quanti saranno e cosa suoneranno? (max 4)" disabled></textarea>
+                </div>
                 <label class="submission-sr-only" for="artist-notes">Note</label>
                 <textarea id="artist-notes" name="note" rows="1" required maxlength="3000" placeholder="Note" aria-describedby="notes-help"></textarea>
-                <p id="notes-help" class="submission-notes-help" hidden>Raccontaci come immagini la sessione: verrai da solo o con altri musicisti? Indica quanti sarete, quali strumenti porterete ed eventuali strumenti o accompagnamenti che vorresti coinvolgere. Se partecipi da solo e non hai richieste particolari, basta scriverlo.</p>
+                <p id="notes-help" class="submission-notes-help" hidden>Raccontaci come immagini la sessione: eventuali strumenti o accompagnamenti che vorresti coinvolgere, esigenze di pubblicazione o altre richieste particolari. Se non hai richieste particolari, basta scriverlo.</p>
                 <button type="submit" class="submission-send" disabled>Invia candidatura</button>
               </fieldset>
               <p id="submission-result" class="submission-result" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -154,7 +165,7 @@
                 <div class="guidelines-columns">
                   <div class="guidelines-column">
                     <div><span class="submission-number">01</span> <h3>Cosa proporre</h3> <p>Puoi proporre uno o al massimo due brani originali, editi o inediti. Inserisci un link per ciascun brano che ci permetta di ascoltarlo/i.</p></div>
-                    <div><span class="submission-number">02</span> <h3>Il materiale</h3> <p>Presentaci brevemente il progetto e aggiungi i riferimenti utili per farti conoscere: altri ascolti, social e press kit.<br><br>Nelle note raccontaci come immagini la sessione: se parteciperesti da solo o con altri musicisti, quanti sareste e quali strumenti vorresti coinvolgere nella sessione. Indica qui anche eventuali esigenze di pubblicazione o altre richieste particolari. Assicurati che i link siano accessibili.</p></div>
+                    <div><span class="submission-number">02</span> <h3>Il materiale</h3> <p>Presentaci brevemente il progetto e aggiungi i riferimenti utili per farti conoscere: altri ascolti, social e press kit.<br><br>Indicaci se verrai da solo o accompagnato da altri musicisti (massimo 4): in quel caso, quanti saranno e cosa suoneranno. Nelle note raccontaci come immagini la sessione e indica eventuali esigenze di pubblicazione o altre richieste particolari. Assicurati che i link siano accessibili.</p></div>
                   </div>
                   <div class="guidelines-column">
                     <div><span class="submission-number">03</span> <h3>La selezione</h3> <p>Ogni proposta viene valutata in relazione alla compatibilità con il format. L’invio non garantisce la partecipazione e una mancata selezione non rappresenta un giudizio sul valore del progetto.</p></div>
@@ -245,7 +256,7 @@
       </button>
     </nav>
 
-    <script src="submissions.js?v=url-20261020-1"></script>
+    <script src="submissions.js?v=band-20261123-1"></script>
     <script src="script.js?v=20261122-contatti"></script>
     <script data-goatcounter="https://9pmsessions.goatcounter.com/count"
             async src="https://gc.zgo.at/count.js"></script>

@@ -3,6 +3,7 @@
   document.querySelectorAll(".submission-form").forEach((form) => {
     const isArtistForm = form.id === "submission-form";
     let resetExtras = () => {};
+    let validateBandChoice = () => true;
     const fieldset = form.querySelector("fieldset");
     const button = form.querySelector("button[type=submit]");
     const result = form.querySelector(".submission-result");
@@ -18,7 +19,7 @@
         : "Submissions closed — Reopening soon";
       marquee.setAttribute("aria-label", marquee.dataset.marqueeText);
     }
-    const fieldSelector = "input:not([type=hidden]):not([type=checkbox]), textarea";
+    const fieldSelector = "input:not([type=hidden]):not([type=checkbox]):not([type=radio]), textarea";
     const fields = [];
     const errors = new Map();
     function fitTextarea(field) {
@@ -173,7 +174,48 @@
         });
         field.focus();
       });
+      // Accompagnatori: Sì apre la domanda aperta (obbligatoria), No la chiude e la svuota.
+      const bandChoice = document.getElementById("band-choice");
+      const bandRadios = Array.from(bandChoice.querySelectorAll("input[type=radio]"));
+      const bandDetails = document.getElementById("band-details");
+      const bandMembers = document.getElementById("band-members");
+      const bandError = document.createElement("span");
+      bandError.id = "band-choice-error";
+      bandError.className = "submission-field-error";
+      bandError.hidden = true;
+      bandChoice.querySelector(".submission-choice-options").before(bandError);
+      bandChoice.setAttribute("aria-describedby", bandError.id);
+      function setBandDetails(open) {
+        bandDetails.hidden = !open;
+        bandMembers.disabled = !open;
+        bandMembers.required = open;
+        if (!open) {
+          bandMembers.value = "";
+          bandMembers.removeAttribute("aria-invalid");
+          errors.get(bandMembers).hidden = true;
+        }
+      }
+      validateBandChoice = () => {
+        const ok = bandRadios.some((radio) => radio.checked);
+        bandError.textContent = ok ? "" : "(Required)";
+        bandError.hidden = ok;
+        if (ok) bandChoice.removeAttribute("aria-invalid");
+        else bandChoice.setAttribute("aria-invalid", "true");
+        return ok;
+      };
+      bandRadios.forEach((radio) => radio.addEventListener("change", () => {
+        const open = radio.value === "Sì" && radio.checked;
+        setBandDetails(open);
+        validateBandChoice();
+        if (open) {
+          fitTextarea(bandMembers);
+          bandMembers.focus();
+        }
+      }));
       resetExtras = () => {
+        setBandDetails(false);
+        bandError.hidden = true;
+        bandChoice.removeAttribute("aria-invalid");
         hideSecondSong();
         closeNotesHelp();
         Array.from(extraLinks.keys()).forEach(removeExtraLink);
@@ -200,6 +242,12 @@
     function validateForm() {
       fields.forEach(normalizeUrl);
       const invalid = Array.from(form.querySelectorAll(fieldSelector)).filter((field) => !validateField(field));
+      if (!validateBandChoice()) {
+        const choice = document.getElementById("band-choice");
+        const radio = choice.querySelector("input[type=radio]");
+        const position = invalid.findIndex((field) => choice.compareDocumentPosition(field) & Node.DOCUMENT_POSITION_FOLLOWING);
+        invalid.splice(position < 0 ? invalid.length : position, 0, radio);
+      }
       if (!invalid.length) return true;
       result.textContent = "";
       invalid[0].focus();
