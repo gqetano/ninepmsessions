@@ -576,8 +576,7 @@ button {
 .submission-choice-options input:focus-visible + span { outline: 2px solid currentColor; outline-offset: 3px; }
 #band-details[hidden],
 .submission-field-error[hidden],
-#second-song[hidden],
-.submission-notes-help[hidden] { display: none; }
+#second-song[hidden] { display: none; }
 .submission-audio-row { gap: 0.35em; }
 .submission-song-toggle {
   flex: 0 0 1.25em;

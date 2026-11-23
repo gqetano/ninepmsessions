@@ -12,7 +12,7 @@
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico?v=3" sizes="16x16 32x32 48x48 64x64">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=3" sizes="512x512">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=3" sizes="any">
-    <link rel="stylesheet" href="styles.css?v=20261123-accompagnatori">
+    <link rel="stylesheet" href="styles.css?v=20261123-form">
   </head>
   <body>
     <main class="deck" data-stack-mode="collapse-above" data-scroll-navigation="experimental" data-active="home" aria-label="Navigazione principale a schede">
@@ -113,7 +113,18 @@
           </button>
         </h2>
         <div id="content-submissions" class="panel-content">
-          <div data-split-row="body" class="submission-section">
+          <div data-split-row="body">
+            <p>
+              Ogni proposta viene valutata in relazione alla compatibilità con
+              il format. L’invio non garantisce la partecipazione e una mancata
+              selezione non rappresenta un giudizio sul valore del progetto.<br><br>
+              Se la proposta è in linea con il format, ti ricontatteremo via
+              email per approfondire i dettagli della produzione e le
+              condizioni economiche.
+            </p>
+          </div>
+          <div data-split-row="ruled" class="submission-section">
+            <p data-split-title>FORM</p>
             <div class="submission-content">
             <!-- Per riaprire: data-submissions-open="true" e rimuovere disabled dal fieldset. -->
             <form id="submission-form" class="submission-form" novalidate data-submissions-open="true" action="https://api.web3forms.com/submit" method="POST">
@@ -152,9 +163,8 @@
                   <label class="submission-sr-only" for="band-members">Quanti saranno e cosa suoneranno? (max 4 musicisti)</label>
                   <textarea id="band-members" name="accompagnatori" rows="1" maxlength="1000" placeholder="Quanti saranno e cosa suoneranno? (max 4)" disabled></textarea>
                 </div>
-                <label class="submission-sr-only" for="artist-notes">Note</label>
-                <textarea id="artist-notes" name="note" rows="1" required maxlength="3000" placeholder="Note" aria-describedby="notes-help"></textarea>
-                <p id="notes-help" class="submission-notes-help" hidden>Raccontaci come immagini la sessione: eventuali strumenti o accompagnamenti che vorresti coinvolgere, esigenze di pubblicazione o altre richieste particolari. Se non hai richieste particolari, basta scriverlo.</p>
+                <label class="submission-sr-only" for="artist-notes">Note — Raccontaci la tua sessione</label>
+                <textarea id="artist-notes" name="note" rows="1" required maxlength="3000" placeholder="Note — Raccontaci la tua sessione"></textarea>
                 <button type="submit" class="submission-send" disabled>Invia candidatura</button>
               </fieldset>
               <p id="submission-result" class="submission-result" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -165,11 +175,10 @@
                 <div class="guidelines-columns">
                   <div class="guidelines-column">
                     <div><span class="submission-number">01</span> <h3>Cosa proporre</h3> <p>Puoi proporre uno o al massimo due brani originali, editi o inediti. Inserisci un link per ciascun brano che ci permetta di ascoltarlo/i.</p></div>
-                    <div><span class="submission-number">02</span> <h3>Il materiale</h3> <p>Presentaci brevemente il progetto e aggiungi i riferimenti utili per farti conoscere: altri ascolti, social e press kit.<br><br>Indicaci se verrai da solo o accompagnato da altri musicisti (massimo 4): in quel caso, quanti saranno e cosa suoneranno. Nelle note raccontaci come immagini la sessione e indica eventuali esigenze di pubblicazione o altre richieste particolari. Assicurati che i link siano accessibili.</p></div>
+                    <div><span class="submission-number">02</span> <h3>Il materiale</h3> <p>Presentaci brevemente il progetto e aggiungi i riferimenti utili per farti conoscere: altri ascolti, social e press kit.<br><br>Indicaci se verrai da solo o accompagnato da altri musicisti (massimo 4): in quel caso, quanti saranno e cosa suoneranno. Assicurati che i link siano accessibili.</p></div>
                   </div>
                   <div class="guidelines-column">
-                    <div><span class="submission-number">03</span> <h3>La selezione</h3> <p>Ogni proposta viene valutata in relazione alla compatibilità con il format. L’invio non garantisce la partecipazione e una mancata selezione non rappresenta un giudizio sul valore del progetto.</p></div>
-                    <div><span class="submission-number">04</span> <h3>Dopo l’invio</h3> <p>Se la proposta è in linea con il format, ti ricontatteremo via email per approfondire i dettagli della produzione e le condizioni economiche.</p></div>
+                    <div><span class="submission-number">03</span> <h3>Note</h3> <p>Raccontaci come immagini la sessione: eventuali strumenti o accompagnamenti che vorresti coinvolgere, esigenze di pubblicazione o altre richieste particolari. Se non hai richieste particolari, basta scriverlo.</p></div>
                   </div>
                 </div>
               </aside>
@@ -205,8 +214,10 @@
                   <input id="collab-phone" name="phone" type="tel" autocomplete="tel" required maxlength="254" placeholder="Numero telefonico / WhatsApp">
                   <label class="submission-sr-only" for="collab-proposal">Raccontaci la tua proposta</label>
                   <textarea id="collab-proposal" name="proposta" rows="1" required maxlength="5000" placeholder="Raccontaci la tua proposta"></textarea>
-                  <label class="submission-sr-only" for="collab-links">Link di riferimento</label>
-                  <textarea id="collab-links" name="link_riferimento" rows="1" maxlength="3000" placeholder="Link di riferimento"></textarea>
+                  <div id="collab-links-group">
+                    <label class="submission-sr-only" for="collab-links">Link utili</label>
+                    <input id="collab-links" name="link_utili" type="url" maxlength="2000" placeholder="Link utili">
+                  </div>
                   <button type="submit" class="submission-send" disabled>Invia proposta</button>
                 </fieldset>
                 <p class="submission-result" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -256,7 +267,7 @@
       </button>
     </nav>
 
-    <script src="submissions.js?v=band-20261123-1"></script>
+    <script src="submissions.js?v=form-20261123-2"></script>
     <script src="script.js?v=20261122-contatti"></script>
     <script data-goatcounter="https://9pmsessions.goatcounter.com/count"
             async src="https://gc.zgo.at/count.js"></script>

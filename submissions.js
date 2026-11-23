@@ -78,36 +78,62 @@
       return row;
     }
     form.querySelectorAll(fieldSelector).forEach(registerField);
+    function createLinkToggle(symbol, label) {
+      const control = document.createElement("button");
+      control.type = "button";
+      control.className = "submission-song-toggle";
+      control.textContent = symbol;
+      control.setAttribute("aria-label", label);
+      return control;
+    }
+    // Campo link con "+": ogni click aggiunge un altro link, senza limite; "−" lo toglie.
+    function setupLinkAdder(containerId, firstId, namePrefix, placeholder, addLabel) {
+      const container = document.getElementById(containerId);
+      const firstField = document.getElementById(firstId);
+      const extraLinks = new Map();
+      let extraLinkId = 1;
+      const addLink = createLinkToggle("+", addLabel);
+      addLink.setAttribute("aria-controls", containerId);
+      firstField.parentElement.classList.add("submission-audio-row");
+      firstField.parentElement.prepend(addLink);
+      function removeExtraLink(field) {
+        const row = extraLinks.get(field);
+        if (!row) return;
+        fields.splice(fields.indexOf(field), 1);
+        errors.delete(field);
+        extraLinks.delete(field);
+        row.remove();
+      }
+      addLink.addEventListener("click", () => {
+        extraLinkId += 1;
+        const field = document.createElement("input");
+        field.type = "url";
+        field.id = `${firstId}-${extraLinkId}`;
+        field.name = `${namePrefix}_${extraLinkId}`;
+        field.maxLength = 2000;
+        field.placeholder = placeholder;
+        field.setAttribute("aria-label", `${placeholder} ${extraLinkId}`);
+        container.append(field);
+        const row = registerField(field);
+        row.classList.add("submission-audio-row");
+        const remove = createLinkToggle("−", `Rimuovi il link ${extraLinkId}`);
+        row.prepend(remove);
+        extraLinks.set(field, row);
+        remove.addEventListener("click", () => {
+          removeExtraLink(field);
+          addLink.focus();
+        });
+        field.focus();
+      });
+      return () => {
+        Array.from(extraLinks.keys()).forEach(removeExtraLink);
+        extraLinkId = 1;
+      };
+    }
+    if (form.id === "collaboration-form") {
+      resetExtras = setupLinkAdder("collab-links-group", "collab-links", "link_utile", "Link utili", "Aggiungi un altro link");
+    }
     if (isArtistForm) {
-      const notes = document.getElementById("artist-notes");
-      const notesHelp = document.getElementById("notes-help");
-      const notesInfo = document.createElement("button");
-      notesInfo.type = "button";
-      notesInfo.className = "submission-notes-info";
-      notesInfo.textContent = "i";
-      notesInfo.setAttribute("aria-label", "Quali informazioni inserire nelle note");
-      notesInfo.setAttribute("aria-controls", "notes-help");
-      notesInfo.setAttribute("aria-expanded", "false");
-      notes.parentElement.append(notesInfo);
-      function closeNotesHelp() {
-        notesHelp.hidden = true;
-        notesInfo.setAttribute("aria-expanded", "false");
-      }
-      notesInfo.addEventListener("click", () => {
-        notesHelp.hidden = !notesHelp.hidden;
-        notesInfo.setAttribute("aria-expanded", String(!notesHelp.hidden));
-      });
-      notesInfo.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") closeNotesHelp();
-      });
-      function createLinkToggle(symbol, label) {
-        const control = document.createElement("button");
-        control.type = "button";
-        control.className = "submission-song-toggle";
-        control.textContent = symbol;
-        control.setAttribute("aria-label", label);
-        return control;
-      }
       const firstSong = document.getElementById("song-link");
       const secondSong = document.getElementById("song-link-2");
       const secondContainer = document.getElementById("second-song");
@@ -137,43 +163,7 @@
         hideSecondSong();
         addSong.focus();
       });
-      const otherLinks = document.getElementById("other-links");
-      const firstOtherLink = document.getElementById("artist-links");
-      const extraLinks = new Map();
-      let extraLinkId = 1;
-      const addLink = createLinkToggle("+", "Aggiungi un altro link");
-      addLink.setAttribute("aria-controls", "other-links");
-      firstOtherLink.parentElement.classList.add("submission-audio-row");
-      firstOtherLink.parentElement.prepend(addLink);
-      function removeExtraLink(field) {
-        const row = extraLinks.get(field);
-        if (!row) return;
-        fields.splice(fields.indexOf(field), 1);
-        errors.delete(field);
-        extraLinks.delete(field);
-        row.remove();
-      }
-      addLink.addEventListener("click", () => {
-        extraLinkId += 1;
-        const field = document.createElement("input");
-        field.type = "url";
-        field.id = `artist-link-${extraLinkId}`;
-        field.name = `link_aggiuntivo_${extraLinkId}`;
-        field.maxLength = 2000;
-        field.placeholder = "Altri link";
-        field.setAttribute("aria-label", `Altro link ${extraLinkId}`);
-        otherLinks.append(field);
-        const row = registerField(field);
-        row.classList.add("submission-audio-row");
-        const remove = createLinkToggle("−", `Rimuovi il link ${extraLinkId}`);
-        row.prepend(remove);
-        extraLinks.set(field, row);
-        remove.addEventListener("click", () => {
-          removeExtraLink(field);
-          addLink.focus();
-        });
-        field.focus();
-      });
+      const resetOtherLinks = setupLinkAdder("other-links", "artist-links", "link_aggiuntivo", "Altri link", "Aggiungi un altro link");
       // Accompagnatori: Sì apre la domanda aperta (obbligatoria), No la chiude e la svuota.
       const bandChoice = document.getElementById("band-choice");
       const bandRadios = Array.from(bandChoice.querySelectorAll("input[type=radio]"));
@@ -217,9 +207,7 @@
         bandError.hidden = true;
         bandChoice.removeAttribute("aria-invalid");
         hideSecondSong();
-        closeNotesHelp();
-        Array.from(extraLinks.keys()).forEach(removeExtraLink);
-        extraLinkId = 1;
+        resetOtherLinks();
       };
     }
     function validateField(field) {
