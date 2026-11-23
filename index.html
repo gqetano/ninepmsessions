@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="it">
+<html lang="it" data-intro="wait">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,7 +12,8 @@
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico?v=3" sizes="16x16 32x32 48x48 64x64">
     <link rel="icon" type="image/png" href="assets/favicon.png?v=3" sizes="512x512">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg?v=3" sizes="any">
-    <link rel="stylesheet" href="styles.css?v=20261123-form">
+    <link rel="stylesheet" href="styles.css?v=20261123-intro3">
+      <noscript><style>html[data-intro] .deck > section, html[data-intro] .site-menu { visibility: visible; }</style></noscript>
   </head>
   <body>
     <main class="deck" data-stack-mode="collapse-above" data-scroll-navigation="experimental" data-active="home" aria-label="Navigazione principale a schede">
@@ -163,8 +164,8 @@
                   <label class="submission-sr-only" for="band-members">Quanti saranno e cosa suoneranno? (max 4 musicisti)</label>
                   <textarea id="band-members" name="accompagnatori" rows="1" maxlength="1000" placeholder="Quanti saranno e cosa suoneranno? (max 4)" disabled></textarea>
                 </div>
-                <label class="submission-sr-only" for="artist-notes">Note — Raccontaci la tua sessione</label>
-                <textarea id="artist-notes" name="note" rows="1" required maxlength="3000" placeholder="Note — Raccontaci la tua sessione"></textarea>
+                <label class="submission-sr-only" for="artist-notes">Note — Esigenze o richieste particolari</label>
+                <textarea id="artist-notes" name="note" rows="1" maxlength="3000" placeholder="Note — Esigenze o richieste particolari"></textarea>
                 <button type="submit" class="submission-send" disabled>Invia candidatura</button>
               </fieldset>
               <p id="submission-result" class="submission-result" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -174,11 +175,13 @@
                 <h2 id="guidelines-title">Quick Guidelines</h2>
                 <div class="guidelines-columns">
                   <div class="guidelines-column">
-                    <div><span class="submission-number">01</span> <h3>Cosa proporre</h3> <p>Puoi proporre uno o al massimo due brani originali, editi o inediti. Inserisci un link per ciascun brano che ci permetta di ascoltarlo/i.</p></div>
-                    <div><span class="submission-number">02</span> <h3>Il materiale</h3> <p>Presentaci brevemente il progetto e aggiungi i riferimenti utili per farti conoscere: altri ascolti, social e press kit.<br><br>Indicaci se verrai da solo o accompagnato da altri musicisti (massimo 4): in quel caso, quanti saranno e cosa suoneranno. Assicurati che i link siano accessibili.</p></div>
+                    <div><span class="submission-number">01</span> <h3>Cosa proporre</h3> <p>Puoi proporre uno o al massimo due brani originali, editi o inediti. Inserisci un link per ciascun brano, possibilmente a una versione acustica: ci aiuta a capire come potrebbe suonare nella sessione.</p></div>
+                    <div><span class="submission-number">02</span> <h3>Il materiale</h3> <p>Presentaci brevemente il progetto e aggiungi i riferimenti utili per farti conoscere: altri ascolti, social e press kit. Assicurati che i link siano accessibili.</p></div>
+                    <div><span class="submission-number">03</span> <h3>I musicisti</h3> <p>Puoi partecipare da solo o accompagnato da altri musicisti, fino a un massimo di 4. In questo caso indicaci quanti saranno e cosa suoneranno.</p></div>
                   </div>
                   <div class="guidelines-column">
-                    <div><span class="submission-number">03</span> <h3>Note</h3> <p>Raccontaci come immagini la sessione: eventuali strumenti o accompagnamenti che vorresti coinvolgere, esigenze di pubblicazione o altre richieste particolari. Se non hai richieste particolari, basta scriverlo.</p></div>
+                    <div><span class="submission-number">04</span> <h3>Strumentazione</h3> <p>La sessione è interamente acustica: non sono ammessi strumenti elettrici o amplificati, come chitarra o basso elettrico. Non prevediamo l’uso della batteria né di sequenze o basi preregistrate, nemmeno sulla voce. Sono ammesse piccole percussioni a mano, come cajon, shaker o tamburello.</p></div>
+                    <div><span class="submission-number">05</span> <h3>Note</h3> <p>Usa le note per segnalarci esigenze di pubblicazione, richieste particolari o altre informazioni utili per chi organizza la sessione.</p></div>
                   </div>
                 </div>
               </aside>
@@ -253,6 +256,7 @@
       </section>
     </main>
 
+
     <!-- Menu: il tondo 9PM apre l'elenco delle sezioni. -->
     <nav class="site-menu" data-site-menu aria-label="Sezioni del sito">
       <ul class="site-menu-list" id="site-menu-list">
@@ -268,7 +272,7 @@
     </nav>
 
     <script src="submissions.js?v=form-20261123-2"></script>
-    <script src="script.js?v=20261122-contatti"></script>
+    <script src="script.js?v=20261123-intro"></script>
     <script data-goatcounter="https://9pmsessions.goatcounter.com/count"
             async src="https://gc.zgo.at/count.js"></script>
   </body>

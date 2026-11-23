@@ -973,3 +973,37 @@ button {
     transition: none;
   }
 }
+
+/* Intro: le schede restano nascoste finché font e titoli non sono a misura (niente
+   scritte che cambiano dimensione), poi tutto il sito sale com'è, senza deformazioni:
+   ogni scheda parte da un quarto di schermo più in basso, una dopo l'altra, intera
+   (l'ombra alta la prolunga verso il basso). Lo gestisce script.js: data-intro="wait"
+   su <html>, poi "run", poi lo toglie. */
+@keyframes intro-rise {
+  from { transform: translateY(25svh); }
+  to { transform: translateY(0); }
+}
+@keyframes intro-menu {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+html[data-intro="wait"] .deck > section,
+html[data-intro="wait"] .site-menu { visibility: hidden; }
+/* Durante la salita le schede sono intere: il titolo si legge tutto e viene coperto
+   dalla scheda successiva solo quando questa arriva al suo posto. */
+html[data-intro="run"] .deck > section {
+  box-shadow: 0 50svh 0 50svh var(--panel-color);
+  animation: intro-rise 1000ms var(--ease) both;
+}
+html[data-intro="run"] .deck > section:not(:first-child) { overflow: visible; }
+html[data-intro="run"] .deck > section:nth-child(2) { animation-delay: 90ms; }
+html[data-intro="run"] .deck > section:nth-child(3) { animation-delay: 180ms; }
+html[data-intro="run"] .deck > section:nth-child(4) { animation-delay: 270ms; }
+html[data-intro="run"] .deck > section:nth-child(5) { animation-delay: 360ms; }
+html[data-intro="run"] .deck > section:nth-child(6) { animation-delay: 450ms; }
+html[data-intro="run"] .deck > section:nth-child(7) { animation-delay: 540ms; }
+html[data-intro="run"] .site-menu { animation: intro-menu 500ms var(--ease) 600ms backwards; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-intro="run"] .deck > section,
+  html[data-intro="run"] .site-menu { animation: none; }
+}

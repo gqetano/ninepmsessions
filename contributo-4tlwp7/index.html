@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="it">
+<html data-intro="wait" lang="it">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,7 +10,7 @@
     <link rel="icon" type="image/x-icon" href="../assets/favicon.ico?v=3" sizes="16x16 32x32 48x48 64x64">
     <link rel="icon" type="image/png" href="../assets/favicon.png?v=3" sizes="512x512">
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=3" sizes="any">
-    <link rel="stylesheet" href="../styles.css?v=20261122-contatti">
+    <link rel="stylesheet" href="../styles.css?v=20261123-intro3">
     <link rel="stylesheet" href="../agenda.css?v=20261122-contatti">
     <style>
       /* Side B: stesso meccanismo del sito (styles.css + script.js), sezioni e colori propri. */
@@ -84,6 +84,7 @@
         .offer-photos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
     </style>
+      <noscript><style>html[data-intro] .deck > section, html[data-intro] .site-menu { visibility: visible; }</style></noscript>
   </head>
   <body>
     <!-- Il contenuto del Side B è cifrato (tools/side-b.mjs): si apre solo con la
@@ -123,7 +124,7 @@
         // Link non valido: si mostra la home "link scaduto", con lo stesso script del sito.
         const closed = () => {
           gate.hidden = false;
-          load("../script.js?v=20261122-contatti");
+          load("../script.js?v=20261123-intro");
         };
         try {
           const key = location.hash.slice(1);
@@ -146,7 +147,7 @@
             old.replaceWith(fresh);
           });
           gate.replaceWith(template.content);
-          await load("../script.js?v=20261122-contatti");
+          await load("../script.js?v=20261123-intro");
           await load("../agenda.js?v=20261122-contatti");
         } catch (error) {
           closed();

@@ -1007,6 +1007,24 @@
 
   calibrateTitleSize();
   buildSubmissionMarquee();
+
+  // Intro (styles.css, "Intro"): parte solo quando font e titoli sono a misura, così
+  // nessuna scritta cambia dimensione mentre sale; al massimo si aspetta 1,5 secondi.
+  if (root.hasAttribute("data-intro")) {
+    let introStarted = false;
+    const startIntro = () => {
+      if (introStarted) return;
+      introStarted = true;
+      calibrateTitleSize();
+      requestFrame(() => requestFrame(() => {
+        root.setAttribute("data-intro", "run");
+        window.setTimeout(() => root.removeAttribute("data-intro"), 1700);
+      }));
+    };
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(startIntro);
+    else startIntro();
+    window.setTimeout(startIntro, 1500);
+  }
   const opensSubmissions = location.hash.toLowerCase() === "#submissions";
   setActivePanel(opensSubmissions ? "submissions" : "home", false);
 
