@@ -4,10 +4,11 @@
   const root = document.querySelector("[data-agenda]");
   if (!root) return;
 
-  // Le date arrivano dal foglio Google "9PM – Agenda" (schede Disponibilità e
-  // Prenotazioni). Con data-agenda-source sul contenitore il sito le legge dallo
-  // script collegato al foglio; senza, usa la copia in window.AGENDA_DATA.
-  // Formato: [{ date: "2026-12-05", start: "15:00", end: "16:30", taken: false }]
+  // Le date arrivano dal Google Calendar "9PM – Agenda": un evento "Disponibile"
+  // apre il giorno, diviso in slot da tre ore; ogni prenotazione è un evento con
+  // l'artista invitato. Con data-agenda-source sul contenitore il sito le legge
+  // dallo script collegato al calendario; senza, usa la copia in window.AGENDA_DATA.
+  // Formato: [{ date: "2026-12-05", start: "10:00", end: "13:00", taken: false }]
   const source = root.dataset.agendaSource || "";
   let days = {};
 
@@ -193,28 +194,41 @@
       <div class="submission-field-row">
         <input name="progetto" placeholder="${selectedSlot ? "Nome / progetto" : "Scegli un orario"}"
           autocomplete="name" ${selectedSlot ? "" : "disabled"} required>
+      </div>
+      <div class="submission-field-row">
+        <input name="email" type="email" placeholder="Email" inputmode="email"
+          autocomplete="email" ${selectedSlot ? "" : "disabled"} required>
         <button type="submit" class="submission-send" ${selectedSlot ? "" : "disabled"}>Prenota</button>
       </div>
       <p class="agenda-result" hidden></p>`;
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      const field = form.elements.progetto;
-      const name = field.value.trim();
+      const result = form.querySelector(".agenda-result");
+      const nameField = form.elements.progetto;
+      const emailField = form.elements.email;
+      const name = nameField.value.trim();
+      const email = emailField.value.trim();
       if (!name) {
-        const result = form.querySelector(".agenda-result");
         result.hidden = false;
         result.textContent = "Scrivi il tuo nome o quello del progetto.";
-        field.focus();
+        nameField.focus();
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        result.hidden = false;
+        result.textContent = "Scrivi un’email valida: lì ti arriva l’invito con la data.";
+        emailField.focus();
         return;
       }
       const day = selectedDay;
       const start = selectedSlot;
       const [, m, d] = day.split("-").map(Number);
       const safeName = name.replace(/[<>&]/g, "");
+      const safeEmail = email.replace(/[<>&]/g, "");
       const done = (note) => {
         const slot = (days[day] || []).find((item) => item.start === start);
         if (slot) slot.taken = true;
-        bookedMessage = `Fatto, ${safeName}: ${d} ${monthNames[m - 1]} alle ${start} è tuo. Ti scriviamo per confermare.${note}`;
+        bookedMessage = `Fatto, ${safeName}: ${d} ${monthNames[m - 1]} alle ${start} è tuo. Ti abbiamo mandato l’invito a ${safeEmail}.${note}`;
         selectedSlot = null;
         fillExpand(body);
         refreshCell(day);
@@ -224,13 +238,15 @@
         done(' <span class="agenda-muted">(Anteprima: non è stato inviato nulla.)</span>');
         return;
       }
-      form.querySelector("input").disabled = true;
-      form.querySelector(".submission-send").disabled = true;
-      // Lo script scrive la riga in Prenotazioni e manda la mail a 9PM.
+      const lock = (off) => {
+        form.querySelectorAll("input, .submission-send").forEach((item) => { item.disabled = off; });
+      };
+      lock(true);
+      // Lo script crea l'evento nel calendario, invita l'artista e avvisa 9PM.
       fetch(source, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ date: day, start, name }),
+        body: JSON.stringify({ date: day, start, name, email }),
       })
         .then((response) => response.json())
         .then((reply) => {
@@ -246,16 +262,14 @@
             selectedSlot = null;
             window.setTimeout(() => { fillExpand(body); refreshCell(day); }, 1600);
           } else {
-            form.querySelector("input").disabled = false;
-            form.querySelector(".submission-send").disabled = false;
+            lock(false);
           }
         })
         .catch(() => {
           const result = form.querySelector(".agenda-result");
           result.hidden = false;
           result.textContent = "Connessione non riuscita. Riprova tra poco.";
-          form.querySelector("input").disabled = false;
-          form.querySelector(".submission-send").disabled = false;
+          lock(false);
         });
     });
   }

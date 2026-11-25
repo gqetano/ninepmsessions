@@ -205,6 +205,10 @@ button.agenda-slot[aria-pressed="true"] {
   margin-top: 1.1rem;
 }
 
+.agenda-form .submission-field-row + .submission-field-row {
+  margin-top: 0.9rem;
+}
+
 .agenda-form .submission-field-row::after {
   background: currentColor;
 }

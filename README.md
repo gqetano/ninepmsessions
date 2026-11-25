@@ -39,5 +39,8 @@ Ricifrare dopo una modifica (il sorgente in chiaro non va mai nel repository):
 
 Senza --key viene generata una chiave nuova e i link vecchi smettono di funzionare.
 
-L'Agenda legge le date dal foglio Google "9PM – Agenda" tramite data-agenda-source
-(URL dello script collegato al foglio); senza, usa la copia in window.AGENDA_DATA.
+L'Agenda legge le date dal Google Calendar "9PM – Agenda" (account 9PM) tramite
+data-agenda-source (URL dell'app web Apps Script collegata al calendario); senza,
+usa la copia in window.AGENDA_DATA. Un evento "Disponibile" apre il giorno, diviso
+in slot da 3 ore; ogni prenotazione diventa un evento con l'artista invitato.
+Lo script non sta nel repository.
