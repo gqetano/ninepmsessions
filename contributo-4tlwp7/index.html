@@ -10,11 +10,11 @@
     <link rel="icon" type="image/x-icon" href="../assets/favicon.ico?v=3" sizes="16x16 32x32 48x48 64x64">
     <link rel="icon" type="image/png" href="../assets/favicon.png?v=3" sizes="512x512">
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg?v=3" sizes="any">
-    <link rel="stylesheet" href="../styles.css?v=20261123-taglio">
-    <link rel="stylesheet" href="../agenda.css?v=20261125-calendar">
+    <link rel="stylesheet" href="../styles.css?v=20261125-autofill">
+    <link rel="stylesheet" href="../agenda.css?v=20261125-caricamento">
     <style>
       /* Side B: stesso meccanismo del sito (styles.css + script.js), sezioni e colori propri. */
-      /* Home nell'arancione del sito, Agenda in blu; le altre in scala di grigi. */
+      /* Home nell'arancione del sito; le altre in scala di grigi, dal più chiaro al più scuro. */
       .side-b {
         --contributo-row: calc(var(--closed-row) + var(--contributo-banner-height, 0px));
         --agenda-row: calc(var(--closed-row) + var(--agenda-banner-height, 0px));
@@ -29,7 +29,7 @@
       .side-b[data-active="agenda"] { --agenda-row: 1fr; }
       .side-b[data-active="liberatorie"] { --liberatorie-row: 1fr; }
       .side-b [data-panel="contributo"] { --panel-color: #d4d4d4; }
-      .side-b [data-panel="agenda"] { --panel-color: #4f7cff; }
+      .side-b [data-panel="agenda"] { --panel-color: #b1b1b1; }
       .side-b [data-panel="liberatorie"] { --panel-color: #8f8f8f; }
       .side-b:not([data-panel-drag]):not([data-active="contributo"]):has([data-panel="contributo"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --contributo-row: calc(var(--peek-row) + var(--contributo-banner-height, 0px)); }
       .side-b:not([data-panel-drag]):not([data-active="agenda"]):has([data-panel="agenda"]:not([data-peek-dismissed]) > .panel-title > button:focus-visible) { --agenda-row: calc(var(--peek-row) + var(--agenda-banner-height, 0px)); }
@@ -148,7 +148,7 @@
           });
           gate.replaceWith(template.content);
           await load("../script.js?v=20261123-intro");
-          await load("../agenda.js?v=20261125-calendar");
+          await load("../agenda.js?v=20261125-caricamento");
         } catch (error) {
           closed();
         }

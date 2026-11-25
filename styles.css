@@ -531,6 +531,22 @@ button {
   line-height: 1.1;
 }
 
+/* Compilazione automatica del browser: niente sfondo colorato, il testo resta
+   del colore della sezione. */
+.submission-field-row > input:-webkit-autofill,
+.submission-field-row > input:-webkit-autofill:hover,
+.submission-field-row > input:-webkit-autofill:focus {
+  -webkit-text-fill-color: inherit;
+  caret-color: currentColor;
+  -webkit-box-shadow: 0 0 0 1000px transparent inset;
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
+.submission-field-row > input:autofill {
+  background: transparent;
+  color: inherit;
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
+
 .submission-field-row > input::placeholder,
 .submission-field-row > textarea::placeholder {
   color: inherit;

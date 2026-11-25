@@ -238,8 +238,17 @@
         done(' <span class="agenda-muted">(Anteprima: non è stato inviato nulla.)</span>');
         return;
       }
+      const send = form.querySelector(".submission-send");
       const lock = (off) => {
         form.querySelectorAll("input, .submission-send").forEach((item) => { item.disabled = off; });
+        if (off) {
+          form.dataset.sending = "";
+          send.innerHTML = '<span class="agenda-dots">Invio</span>';
+          result.hidden = true;
+        } else {
+          delete form.dataset.sending;
+          send.textContent = "Prenota";
+        }
       };
       lock(true);
       // Lo script crea l'evento nel calendario, invita l'artista e avvisa 9PM.
